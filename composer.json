@@ -2,7 +2,7 @@
     "name": "statsig/statsigsdk",
     "description": "The Statsig php SDK for multi-user, server side environments.",
     "keywords": [
-        "feature gate", "ab test", "a/b test", "statsig"
+        "feature gate", "ab test", "ab test", "statsig"
     ],
     "type": "library",
     "license": "ISC",
