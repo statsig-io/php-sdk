@@ -8,11 +8,24 @@ class StatsigStore {
     private $gates;
 
     function __construct($file) {
-        $this->file = $file;
-        $specs = json_decode(file_get_contents($this->file), true);
-
-        $this->gates = $specs["gates"];
-        $this->configs = $specs["configs"];
+        $this->gates = [];
+        $this->configs = [];
+        $this->file = null;
+        try {
+            $contents = @file_get_contents($file);
+            if ($contents !== false) {
+                $this->file = $file;
+                $specs = json_decode($contents, true);
+    
+                $this->gates = $specs["gates"];
+                $this->configs = $specs["configs"];
+            } else {
+                echo "Failed to read statsig config file, returning default values";
+            }
+        } catch (Exception $e) {
+            echo "Failed to read statsig config file, returning default values";
+            echo $e->getMessage();
+        }
     }
 
     function getGateDefinition($gate) {

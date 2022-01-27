@@ -9,7 +9,6 @@ require dirname(__FILE__).'/../src/statsig_server.php';
 use Statsig\Evaluator;
 use Statsig\StatsigServer;
 use Statsig\StatsigNetwork;
-use Statsig\StatsigLogger;
 use Statsig\StatsigUser;
 use Statsig\StatsigOptions;
 use Statsig\StatsigEvent;
