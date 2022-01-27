@@ -1,0 +1,106 @@
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+require dirname(__FILE__).'/../src/statsig_options.php';
+require dirname(__FILE__).'/../src/statsig_user.php';
+require dirname(__FILE__).'/../src/statsig_server.php';
+
+use Statsig\Evaluator;
+use Statsig\StatsigServer;
+use Statsig\StatsigNetwork;
+use Statsig\StatsigLogger;
+use Statsig\StatsigUser;
+use Statsig\StatsigOptions;
+use Statsig\StatsigEvent;
+
+class TestE2E extends PHPUnit_Framework_TestCase {
+
+    private $evaluator;
+    private $cases;
+    private $key;
+
+    public function setUp() {
+        $key = getenv("test_api_key");
+        if (!$key || $key === null || strlen($key === 0)) {
+            try {
+                $key = file_get_contents(__DIR__.'/../../../ops/secrets/prod_keys/statsig-rulesets-eval-consistency-test-secret.key');
+            } catch (Exception $e) {
+                throw new Exception("THIS TEST IS EXPECTED TO FAIL FOR NON-STATSIG EMPLOYEES! If this is the" +
+                "only test failing, please proceed to submit a pull request. If you are a Statsig employee," +
+                "chat with jkw.");
+            }
+        }
+        $this->key = $key;
+        $out = null;
+        exec("php sync.php --secret ".$key." --output statsig.config 2>&1", $out);
+
+        $net = new StatsigNetwork();
+        $net->setSDKKey($key);
+        $this->evaluator = new Evaluator(new StatsigOptions("../statsig.config", "../statsig.log"));
+
+        $this->cases = $net->post_request('rulesets_e2e_test', json_encode((object)[]));
+        $this->statsig = new StatsigServer($key, new StatsigOptions("../statsig.config", "../statsig.log"));
+    }
+
+    public function tearDown() {
+        unlink("statsig.config");
+        $out = null;
+        // send.php will unlink the log file
+        exec("php send.php --secret ".$this->key." --file statsig.log 2>&1", $out);
+    }
+
+    public function testCases() {
+        foreach ($this->cases as $entry) {
+            foreach ($entry as $val) {
+                $user = $val["user"];
+                $statsig_user = new StatsigUser($user["userID"]);
+                $statsig_user = $statsig_user
+                    ->setAppVersion($user["appVersion"])
+                    ->setUserAgent($user["userAgent"])
+                    ->setIP($user["ip"]);
+                if (array_key_exists("email", $user)) {
+                    $statsig_user = $statsig_user->setEmail($user["email"]);
+                }
+                if (array_key_exists("statsigEnvironment", $user)) {
+                    $statsig_user = $statsig_user->setStatsigEnvironment($user["statsigEnvironment"]);
+                }
+                if (array_key_exists("custom", $user)) {
+                    $statsig_user = $statsig_user->setCustom($user["custom"]);
+                }
+                if (array_key_exists("privateAttributes", $user)) {
+                    $statsig_user = $statsig_user->setPrivateAttributes($user["privateAttributes"]);
+                }
+                if (array_key_exists("customIDs", $user)) {
+                    $statsig_user = $statsig_user->setCustomIDs($user["customIDs"]);
+                }
+                $event = new StatsigEvent("newevent");
+                $event->setUser($statsig_user);
+                $event->setValue(1337);
+                $event->setMetadata(array("hello" => "world"));
+                $this->statsig->logEvent($event);
+                $gates = $val["feature_gates_v2"];
+                foreach ($gates as $gate) {
+                    $name = $gate["name"];
+                    $this->statsig->checkGate($statsig_user, $name);
+                    $eval_result = $this->evaluator->checkGate($statsig_user, $name);
+                    $server_result = $gate["value"];
+                    $this->assertEquals($server_result, $eval_result->boolValue);
+                    $this->assertEquals($gate["rule_id"], $eval_result->ruleID);
+                    $this->assertEquals($gate["secondary_exposures"], $eval_result->secondaryExposures);
+                }
+
+                $configs = $val["dynamic_configs"];
+                foreach ($configs as $config) {
+                    $name = $config["name"];
+                    $this->statsig->getConfig($statsig_user, $name);
+                    $eval_result = $this->evaluator->getConfig($statsig_user, $name);
+                    $server_result = $config["value"];
+                    $this->assertEquals($server_result, $eval_result->jsonValue);
+                    $this->assertEquals($config["rule_id"], $eval_result->ruleID);
+                    $this->assertEquals($config["secondary_exposures"], $eval_result->secondaryExposures);
+                }
+            }
+        }
+    }
+}

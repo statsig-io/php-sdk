@@ -1,0 +1,36 @@
+{
+    "name": "statsig/statsigsdk",
+    "description": "The Statsig php SDK for multi-user, server side environments.",
+    "keywords": [
+        "feature gate", "ab test", "a/b test", "statsig"
+    ],
+    "type": "library",
+    "license": "ISC",
+    "homepage": "https://github.com/statsig-io/ip3country-php",
+    "authors": [{
+        "name": "Statsig",
+        "email": "support@statsig.com",
+        "homepage": "https://www.statsig.com"
+    }],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.0.0",
+        "ua-parser/uap-php": "^3.9",
+        "statsig/ip3country": "^0.1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.0"
+    },
+    "support": {
+        "issues": "https://github.com/statsig-io/ip3country-php/issues",
+        "source": "https://github.com/statsig-io/ip3country-php"
+    },
+    "autoload": {
+        "psr-0": {
+            "Statsig\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "classmap": ["tests"]
+    }
+}
