@@ -10,6 +10,7 @@ class StatsigEvent {
 
     function __construct($name) {
         $this->eventName = $name;
+        $this->time = round(microtime(true) * 1000);
     }
 
     function setUser($user) {
@@ -24,12 +25,17 @@ class StatsigEvent {
         $this->metadata = $metadata;
     }
 
+    function setTime($time) {
+        $this->time = $time;
+    }
+
     function toJson() {
         $evt = (object)[];
         $evt->eventName = $this->eventName;
         $evt->user = $this->user;
         $evt->value = $this->value;
         $evt->metadata = $this->metadata;
+        $evt->time = $this->time;
         return $evt;
     }
 

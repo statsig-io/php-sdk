@@ -9,6 +9,7 @@ require dirname(__FILE__).'/../src/statsig_user.php';
 use Statsig\StatsigServer;
 use Statsig\StatsigOptions;
 use Statsig\StatsigUser;
+use Statsig\StatsigEvent;
 
 class TestStatsigServer extends PHPUnit_Framework_TestCase {
 
@@ -63,6 +64,16 @@ class TestStatsigServer extends PHPUnit_Framework_TestCase {
         $nonexistent = $this->statsig->getConfig($this->statsigUser, "nonexistent_config");
         $this->assertEquals(false, $nonexistent->get("test", false));
 
+        $event_default_time = new StatsigEvent("test1");
+        $this->statsig->logEvent($event_default_time);
+
+        $event_override_time = new StatsigEvent("test2");
+        $time = round(microtime(true) * 1000);
+        $event_override_time->setTime($time);
+        $event_override_time->setValue("test_value");
+        $event_override_time->setMetadata(array("hello" => "world"));
+        $this->statsig->logEvent($event_override_time);
+
         $this->statsig->flush();
 
         $this->assertEquals(true, file_exists(__DIR__."/testdata.log"));
@@ -78,7 +89,7 @@ class TestStatsigServer extends PHPUnit_Framework_TestCase {
             $json = json_decode($line, true);
             $events = array_merge($events, $json);
         }
-        $this->assertEquals(9, count($events));
+        $this->assertEquals(11, count($events));
 
         $this->verifyExposure(
             $events[0],
@@ -167,6 +178,15 @@ class TestStatsigServer extends PHPUnit_Framework_TestCase {
             "nonexistent_config",
             "",
         );
+
+        $this->assertEquals("test1", $events[9]["eventName"]);
+        $this->assertLessThanOrEqual(round(microtime(true) * 1000), $events[9]["time"]);
+
+        $this->assertEquals("test2", $events[10]["eventName"]);
+        $this->assertEquals($time, $events[10]["time"]);
+        $this->assertEquals("test_value", $events[10]["value"]);
+        $this->assertEquals("world", $events[10]["metadata"]["hello"]);
+
     }
 
     public function verifyExposure(
@@ -179,6 +199,7 @@ class TestStatsigServer extends PHPUnit_Framework_TestCase {
         $this->assertEquals($name, $event["eventName"]);
         $this->assertEquals($value, $event["metadata"][$key]);
         $this->assertEquals($ruleID, $event["metadata"]["ruleID"]);
+        $this->assertLessThanOrEqual(round(microtime(true) * 1000), $event["time"]);
     }
 
     public function tearDown() {
