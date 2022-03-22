@@ -101,10 +101,12 @@ class Evaluator {
     function evalCondition($user_obj, $condition) {
         $user = $user_obj->toEvaluationDictionary();
         $value = null;
-        $field = $condition["field"];
-        $target = $condition["targetValue"];
-        $idType = $condition["idType"];
-        $type = $condition["type"];
+
+        $field = array_key_exists("field", $condition) ? $condition["field"] : null;
+        $target = array_key_exists("targetValue", $condition) ? $condition["targetValue"] : null;
+        $idType = array_key_exists("idType", $condition) ? $condition["idType"] : null;
+        $type = array_key_exists("type", $condition) ? $condition["type"] : null;
+
         switch (strtolower($type)) {
             case 'public': 
                 return new Evaluation(true, "");
@@ -137,7 +139,8 @@ class Evaluator {
                 $value = $this->getFromEnvironment($user, $field);
                 break;
             case 'user_bucket':
-                $salt = $condition["additionalValues"]["salt"] ?? "";
+                $additional_values = array_key_exists("additionalValues", $condition) ? $condition["additionalValues"] : array();
+                $salt = array_key_exists("salt", $additional_values) ? $additional_values["salt"] : "";
                 $salt = $this->getValueAsString($salt);
                 $unit_id = $this->getUnitID($user, $idType);
                 $value = floatval(gmp_mod($this->computeUserHash(sprintf("%s.%s", $salt, $unit_id)), 1000));
@@ -149,7 +152,8 @@ class Evaluator {
                 return new Evaluation(false, "", true);
         }
 
-        $operator = strtolower($condition["operator"]);
+
+        $operator = array_key_exists("operator", $condition) ? $condition["operator"] : "";
 
         switch ($operator) {
             case 'gt': {
@@ -380,7 +384,8 @@ class Evaluator {
     }
 
     function evalPassPercentage($user, $rule, $config) {
-        $unit_id = $this->getUnitID($user, $rule["idType"]) ?? "";
+        $id_type = array_key_exists("idType", $rule) ? $rule["idType"] : "";
+        $unit_id = $this->getUnitID($user, $id_type) ?? "";
         $hash = $this->computeUserHash(
             sprintf(
                 "%s.%s.%s",

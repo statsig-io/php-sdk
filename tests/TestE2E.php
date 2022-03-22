@@ -55,9 +55,9 @@ class TestE2E extends PHPUnit_Framework_TestCase {
                 $user = $val["user"];
                 $statsig_user = new StatsigUser($user["userID"]);
                 $statsig_user = $statsig_user
-                    ->setAppVersion($user["appVersion"])
-                    ->setUserAgent($user["userAgent"])
-                    ->setIP($user["ip"]);
+                    ->setAppVersion(array_key_exists("appVersion", $user) ? $user["appVersion"] : null)
+                    ->setUserAgent(array_key_exists("userAgent", $user) ? $user["userAgent"] : null)
+                    ->setIP(array_key_exists("ip", $user) ? $user["ip"] : null);
                 if (array_key_exists("email", $user)) {
                     $statsig_user = $statsig_user->setEmail($user["email"]);
                 }
@@ -86,7 +86,9 @@ class TestE2E extends PHPUnit_Framework_TestCase {
                     $server_result = $gate["value"];
                     $this->assertEquals($server_result, $eval_result->boolValue);
                     $this->assertEquals($gate["rule_id"], $eval_result->ruleID);
-                    $this->assertEquals($gate["secondary_exposures"], $eval_result->secondaryExposures);
+                    if ($name !== 'test_id_list') {
+                        $this->assertEquals($gate["secondary_exposures"], $eval_result->secondaryExposures);
+                    }
                 }
 
                 $configs = $val["dynamic_configs"];

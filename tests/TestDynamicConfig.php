@@ -5,7 +5,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require dirname(__FILE__).'/../src/dynamic_config.php';
 use Statsig\DynamicConfig;
 
-class TestE2E extends PHPUnit_Framework_TestCase {
+class TestDynamicConfig extends PHPUnit_Framework_TestCase {
 
     private $config;
 
