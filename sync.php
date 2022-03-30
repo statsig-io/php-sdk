@@ -14,7 +14,7 @@ require './vendor/autoload.php';
 
 use Statsig\StatsigNetwork;
 
-$version = "0.1.0";
+$version = "0.2.0";
 
 $args = parse($argv);
 if (!isset($args['secret'])) {
