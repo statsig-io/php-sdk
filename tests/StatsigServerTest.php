@@ -1,17 +1,14 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+namespace Statsig\Test;
 
-require dirname(__FILE__).'/../src/statsig_server.php';
-require dirname(__FILE__).'/../src/statsig_options.php';
-require dirname(__FILE__).'/../src/statsig_user.php';
-
+use PHPUnit\Framework\TestCase;
 use Statsig\StatsigServer;
 use Statsig\StatsigOptions;
 use Statsig\StatsigUser;
 use Statsig\StatsigEvent;
 
-class TestStatsigServer extends PHPUnit_Framework_TestCase {
+class StatsigServerTest extends TestCase {
 
     private $statsig;
 

@@ -1,11 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+namespace Statsig\Test;
 
-require dirname(__FILE__).'/../src/statsig_options.php';
-require dirname(__FILE__).'/../src/statsig_user.php';
-require dirname(__FILE__).'/../src/statsig_server.php';
-
+use PHPUnit\Framework\TestCase;
 use Statsig\Evaluator;
 use Statsig\StatsigServer;
 use Statsig\StatsigNetwork;
@@ -13,7 +10,7 @@ use Statsig\StatsigUser;
 use Statsig\StatsigOptions;
 use Statsig\StatsigEvent;
 
-class TestE2E extends PHPUnit_Framework_TestCase {
+class E2ETest extends TestCase {
 
     private $evaluator;
     private $cases;
@@ -23,7 +20,7 @@ class TestE2E extends PHPUnit_Framework_TestCase {
         $key = getenv("test_api_key");
         if (!$key || $key === null || strlen($key === 0)) {
             try {
-                $key = file_get_contents(__DIR__.'/../../../ops/secrets/prod_keys/statsig-rulesets-eval-consistency-test-secret.key');
+                $key = file_get_contents(__DIR__.'/../../ops/secrets/prod_keys/statsig-rulesets-eval-consistency-test-secret.key');
             } catch (Exception $e) {
                 throw new Exception("THIS TEST IS EXPECTED TO FAIL FOR NON-STATSIG EMPLOYEES! If this is the" +
                 "only test failing, please proceed to submit a pull request. If you are a Statsig employee," +
@@ -84,9 +81,9 @@ class TestE2E extends PHPUnit_Framework_TestCase {
                     $this->statsig->checkGate($statsig_user, $name);
                     $eval_result = $this->evaluator->checkGate($statsig_user, $name);
                     $server_result = $gate["value"];
-                    $this->assertEquals($server_result, $eval_result->boolValue);
-                    $this->assertEquals($gate["rule_id"], $eval_result->ruleID);
                     if ($name !== 'test_id_list') {
+                        $this->assertEquals($server_result, $eval_result->boolValue);
+                        $this->assertEquals($gate["rule_id"], $eval_result->ruleID);
                         $this->assertEquals($gate["secondary_exposures"], $eval_result->secondaryExposures);
                     }
                 }

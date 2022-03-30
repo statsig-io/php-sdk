@@ -6,7 +6,7 @@
     ],
     "type": "library",
     "license": "ISC",
-    "homepage": "https://github.com/statsig-io/ip3country-php",
+    "homepage": "https://github.com/statsig-io/php-sdk",
     "authors": [{
         "name": "Statsig",
         "email": "support@statsig.com",
@@ -14,7 +14,7 @@
     }],
     "minimum-stability": "dev",
     "require": {
-        "php": ">=7.0.0",
+        "php": "^7.4 || ^8.0",
         "ua-parser/uap-php": "^3.9",
         "statsig/ip3country": "^0.1.0"
     },
@@ -22,15 +22,20 @@
         "phpunit/phpunit": "~4.0"
     },
     "support": {
-        "issues": "https://github.com/statsig-io/ip3country-php/issues",
-        "source": "https://github.com/statsig-io/ip3country-php"
+        "issues": "https://github.com/statsig-io/php-sdk/issues",
+        "source": "https://github.com/statsig-io/php-sdk"
     },
     "autoload": {
-        "psr-0": {
+        "psr-4": {
             "Statsig\\": "src/"
         }
     },
     "autoload-dev": {
-        "classmap": ["tests"]
+        "psr-4": {
+            "Statsig\\Test\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit --no-coverage"
     }
 }

@@ -2,26 +2,9 @@
 
 namespace Statsig;
 
-require dirname(__FILE__).'/statsig_store.php';
-require_once 'vendor/autoload.php';
 use UAParser\Parser;
 use ip3country\IP3Country;
-
-class Evaluation {
-    public $boolValue;
-    public $jsonValue;
-    public $ruleID;
-    public $fetchFromServer;
-    public $secondaryExposures;
-
-    function __construct($boolValue, $ruleID = "", $jsonValue = [], $secondaryExposures = [], $fetchFromServer = false) {
-        $this->boolValue = $boolValue;
-        $this->ruleID = $ruleID;
-        $this->jsonValue = $jsonValue;
-        $this->secondaryExposures = $secondaryExposures;
-        $this->fetchFromServer = $fetchFromServer;
-    }
-}
+use Statsig\ConfigEvaluation;
 
 class Evaluator {
     private $store;
@@ -38,7 +21,7 @@ class Evaluator {
     function checkGate($user, $gate) {
         $def = $this->store->getGateDefinition($gate);
         if ($def === null) {
-            return new Evaluation(false, "");
+            return new ConfigEvaluation(false, "");
         }
         return $this->eval($user, $def);
     }
@@ -46,15 +29,14 @@ class Evaluator {
     function getConfig($user, $config) {
         $def = $this->store->getConfigDefinition($config);
         if ($def === null) {
-            return new Evaluation(false, "");
+            return new ConfigEvaluation(false, "");
         }
         return $this->eval($user, $def);
     }
 
-
     function eval($user, $config) {
         if (!$config["enabled"]) {
-            return new Evaluation(false, "disabled", $config["defaultValue"]);
+            return new ConfigEvaluation(false, "disabled", $config["defaultValue"]);
         }
         $secondary_exposures = [];
         for ($i = 0; $i < count($config["rules"]); $i++) {
@@ -66,10 +48,10 @@ class Evaluator {
             $secondary_exposures = array_merge($secondary_exposures, $ruleResult->secondaryExposures);
             if ($ruleResult->boolValue === true) {
                 $pass = $this->evalPassPercentage($user->toEvaluationDictionary(), $rule, $config);
-                return new Evaluation($pass === true, $rule["id"], $pass === true ? $rule["returnValue"] : $config["defaultValue"], $secondary_exposures);
+                return new ConfigEvaluation($pass === true, $rule["id"], $pass === true ? $rule["returnValue"] : $config["defaultValue"], $secondary_exposures);
             }
         }
-        return new Evaluation(false, "default", $config["defaultValue"], $secondary_exposures);
+        return new ConfigEvaluation(false, "default", $config["defaultValue"], $secondary_exposures);
     }
 
     function evalRule($user, $rule) {
@@ -83,7 +65,7 @@ class Evaluator {
             }
             $condition_results[] = $condition_result;
         }
-        $result = new Evaluation(true, $rule["id"], $rule["returnValue"], $secondary_exposures);
+        $result = new ConfigEvaluation(true, $rule["id"], $rule["returnValue"], $secondary_exposures);
 
         for ($i = 0; $i < count($condition_results); $i++) {
             $condition_result = $condition_results[$i];
@@ -109,7 +91,7 @@ class Evaluator {
 
         switch (strtolower($type)) {
             case 'public': 
-                return new Evaluation(true, "");
+                return new ConfigEvaluation(true, "");
             case 'fail_gate':
             case 'pass_gate':
                 $nested = $this->checkGate($user_obj, $target);
@@ -122,7 +104,7 @@ class Evaluator {
                     "gateValue" => $nested->boolValue ? "true" : "false",
                     "ruleID" => $nested->ruleID,
                 ]);
-                return new Evaluation($result, "", $nested->jsonValue, $all_exposures, $nested->fetchFromServer);
+                return new ConfigEvaluation($result, "", $nested->jsonValue, $all_exposures, $nested->fetchFromServer);
             case 'ip_based':
                 $value = $this->getFromUser($user, $field) ?? $this->getFromIP($user, $field);
                 break;
@@ -149,7 +131,7 @@ class Evaluator {
                 $value = $this->getUnitID($user, $idType);
                 break;
             default:
-                return new Evaluation(false, "", true);
+                return new ConfigEvaluation(false, "", [], [], true);
         }
 
 
@@ -160,127 +142,127 @@ class Evaluator {
                 $floatVal = $this->getValueAsFloat($value);
                 $floatTarget = $this->getValueAsFloat($target);
                 if ($floatVal === null || $floatTarget === null) {
-                    return new Evaluation(false);
+                    return new ConfigEvaluation(false);
                 }
-                return new Evaluation($floatVal > $floatTarget);
+                return new ConfigEvaluation($floatVal > $floatTarget);
             }
             case 'gte': {
                 $floatVal = $this->getValueAsFloat($value);
                 $floatTarget = $this->getValueAsFloat($target);
                 if ($floatVal === null || $floatTarget === null) {
-                    return new Evaluation(false);
+                    return new ConfigEvaluation(false);
                 }
-                return new Evaluation($floatVal >= $floatTarget);
+                return new ConfigEvaluation($floatVal >= $floatTarget);
             }
             case 'lt': {
                 $floatVal = $this->getValueAsFloat($value);
                 $floatTarget = $this->getValueAsFloat($target);
                 if ($floatVal === null || $floatTarget === null) {
-                    return new Evaluation(false);
+                    return new ConfigEvaluation(false);
                 }
-                return new Evaluation($floatVal < $floatTarget);
+                return new ConfigEvaluation($floatVal < $floatTarget);
             }
             case 'lte': {
                 $floatVal = $this->getValueAsFloat($value);
                 $floatTarget = $this->getValueAsFloat($target);
                 if ($floatVal === null || $floatTarget === null) {
-                    return new Evaluation(false);
+                    return new ConfigEvaluation(false);
                 }
-                return new Evaluation($floatVal <= $floatTarget);
+                return new ConfigEvaluation($floatVal <= $floatTarget);
             }
             case 'version_gt': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->versionCompareHelper($value, $target, function($v1, $v2) {
                         return $this->versionCompare($v1, $v2) > 0;
                     })
                 );
             }
             case 'version_gte': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->versionCompareHelper($value, $target, function($v1, $v2) {
                         return $this->versionCompare($v1, $v2) >= 0;
                     })
                 );
             }
             case 'version_lt': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->versionCompareHelper($value, $target, function($v1, $v2) {
                         return $this->versionCompare($v1, $v2) < 0;
                     })
                 );
             }
             case 'version_lte': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->versionCompareHelper($value, $target, function($v1, $v2) {
                         return $this->versionCompare($v1, $v2) <= 0;
                     })
                 );
             }
             case 'version_eq': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->versionCompareHelper($value, $target, function($v1, $v2) {
                         return $this->versionCompare($v1, $v2) === 0;
                     })
                 );
             }
             case 'version_neq': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->versionCompareHelper($value, $target, function($v1, $v2) {
                         return $this->versionCompare($v1, $v2) !== 0;
                     })
                 );
             }
             case 'any': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->matchStringInArray($value, $target, function($a, $b) {
                         return strcasecmp($a, $b) === 0;
                     })
                 );
             }
             case 'none': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     !$this->matchStringInArray($value, $target, function($a, $b) {
                         return strcasecmp($a, $b) === 0;
                     })
                 );
             }
             case 'any_case_sensitive': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->matchStringInArray($value, $target, function($a, $b) {
                         return strcmp($a, $b) === 0;
                     })
                 );
             }
             case 'none_case_sensitive': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     !$this->matchStringInArray($value, $target, function($a, $b) {
                         return strcmp($a, $b) === 0;
                     })
                 );
             }
             case 'str_starts_with_any': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->matchStringInArray($value, $target, function($a, $b) {
                         return str_starts_with($a, $b);
                     })
                 );
             }
             case 'str_ends_with_any': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->matchStringInArray($value, $target, function($a, $b) {
                         return str_ends_with($a, $b);
                     })
                 );
             }
             case 'str_contains_any': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     $this->matchStringInArray($value, $target, function($a, $b) {
                         return stripos($a, $b) !== false;
                     })
                 );
             }
             case 'str_contains_none': {
-                return new Evaluation(
+                return new ConfigEvaluation(
                     !$this->matchStringInArray($value, $target, function($a, $b) {
                         return stripos($a, $b) !== false;
                     })
@@ -289,31 +271,31 @@ class Evaluator {
             case 'str_matches': {
                 $str_val = $this->getValueAsString($value);
                 if ($str_val === null) {
-                    return new Evaluation(false);
+                    return new ConfigEvaluation(false);
                 }
 
-                return new Evaluation(
+                return new ConfigEvaluation(
                     preg_match($target, $str_val)
                 );
             }
             case 'eq':
-                return new Evaluation($value === $target);
+                return new ConfigEvaluation($value === $target);
             case 'neq':
-                return new Evaluation($value !== $target);
+                return new ConfigEvaluation($value !== $target);
             case 'before':
-                return new Evaluation(date($value) < date($target));
+                return new ConfigEvaluation(date($value) < date($target));
             case 'after':
-                return new Evaluation(date($value) > date($target));
+                return new ConfigEvaluation(date($value) > date($target));
             case 'on':
                 $a = date($value)->format('Y-m-d');
                 $b = date($target)->format('Y-m-d');
-                return new Evaluation($a == $b);
+                return new ConfigEvaluation($a == $b);
             case 'in_segment_list':
             case 'not_in_segment_list':
                 // TODO id lists
-                return new Evaluation(false, "", true);
+                return new ConfigEvaluation(false, "", [], [], true);
             default:
-                return new Evaluation(false, "", true);
+                return new ConfigEvaluation(false, "", [], [], true);
         }
     }
 

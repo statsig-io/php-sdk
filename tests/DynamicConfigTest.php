@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+namespace Statsig\Test;
 
-require dirname(__FILE__).'/../src/dynamic_config.php';
+use PHPUnit\Framework\TestCase;
 use Statsig\DynamicConfig;
 
-class TestDynamicConfig extends PHPUnit_Framework_TestCase {
+class DynamicConfigTest extends TestCase {
 
     private $config;
 

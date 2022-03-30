@@ -2,12 +2,6 @@
 
 namespace Statsig;
 
-require __DIR__.'/evaluator.php';
-require __DIR__.'/statsig_logger.php';
-require __DIR__.'/statsig_event.php';
-require __DIR__.'/dynamic_config.php';
-require __DIR__.'/statsig_network.php';
-
 use Statsig\StatsigNetwork;
 use Statsig\Evaluator;
 use Statsig\StatsigLogger;

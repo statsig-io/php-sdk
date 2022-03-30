@@ -2,14 +2,31 @@
 
 namespace Statsig;
 
+// From https://www.uuidgenerator.net/dev-corner/php
+function guidv4($data = null) {
+    // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
+    $data = $data ?? random_bytes(16);
+    assert(strlen($data) == 16);
+
+    // Set version to 0100
+    $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+    // Set bits 6-7 to 10
+    $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+
+    // Output the 36 character UUID.
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+}
+
 class StatsigNetwork {
     private $key;
     private $statsigMetadata;
+    private $sessionID;
     function __construct($version = "0.1.0") {
         $metadata = (object)[];
         $metadata->sdkType = "php-server";
         $metadata->sdkVersion = $version;
         $this->statsigMetadata = $metadata;
+        $this->sessionID = guidv4();
     }
 
     function setSdkKey($key) {
@@ -56,7 +73,8 @@ class StatsigNetwork {
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => $input,
             CURLOPT_HTTPHEADER => array(
-                "statsig-api-key: {$this->key}",
+                "STATSIG-API-KEY: {$this->key}",
+                "STATSIG-SERVER-SESSION-ID: {$this->sessionID}",
                 'Content-Type: application/json'
             ),
         ));

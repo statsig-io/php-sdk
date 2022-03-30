@@ -12,8 +12,6 @@
 
 require './vendor/autoload.php';
 
-require dirname(__FILE__).'/src/statsig_network.php';
-
 use Statsig\StatsigNetwork;
 
 $version = "0.1.0";
