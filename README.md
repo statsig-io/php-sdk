@@ -1,5 +1,8 @@
 ## Statsig PHP Server SDK
 
+[![tests](https://github.com/statsig-io/php-sdk/actions/workflows/test.yml/badge.svg)](https://github.com/statsig-io/php-sdk/actions/workflows/test.yml)
+
+
 The php SDK for multi-user, server side environments. If you need a SDK for another language or single user client environment, check out our [other SDKs](https://docs.statsig.com/#sdks).
 
 Statsig helps you move faster with Feature Gates (Feature Flags) and Dynamic Configs. It also allows you to run A/B tests to validate your new features and understand their impact on your KPIs. If you're new to Statsig, create an account at [statsig.com](https://www.statsig.com).
