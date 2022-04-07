@@ -5,6 +5,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 0,15 * * *'
   workflow_dispatch:
 
 permissions:
@@ -12,9 +14,10 @@ permissions:
 
 jobs:
   build:
-
+  
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
+    
     steps:
     - uses: actions/checkout@v3
     - name: Setup PHP
