@@ -3,7 +3,8 @@
 namespace Statsig;
 
 // From https://www.uuidgenerator.net/dev-corner/php
-function guidv4($data = null) {
+function guidv4($data = null)
+{
     // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
     $data = $data ?? random_bytes(16);
     assert(strlen($data) == 16);
@@ -17,11 +18,13 @@ function guidv4($data = null) {
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
 
-class StatsigNetwork {
+class StatsigNetwork
+{
     private $key;
     private $statsigMetadata;
     private $sessionID;
-    function __construct($version = "0.2.2") {
+    function __construct($version = "0.2.2")
+    {
         $metadata = (object)[];
         $metadata->sdkType = "php-server";
         $metadata->sdkVersion = $version;
@@ -29,38 +32,44 @@ class StatsigNetwork {
         $this->sessionID = guidv4();
     }
 
-    function setSdkKey($key) {
+    function setSdkKey($key)
+    {
         $this->key = $key;
     }
 
-    function downloadConfigSpecs() {
+    function downloadConfigSpecs()
+    {
         return $this->post_request("download_config_specs", json_encode((object)[]));
     }
 
-    function checkGate($user, $gate) {
+    function checkGate(StatsigUser $user, string $gate)
+    {
         $req_body = (object)[];
-        $req_body->user = $user;
+        $req_body->user = $user->toLogDictionary();
         $req_body->gateName = $gate;
         $req_body->statsigMetadata = $this->statsigMetadata;
         return $this->post_request("check_gate", json_encode($req_body));
     }
 
-    function getConfig($user, $config) {
+    function getConfig(StatsigUser $user, string $config)
+    {
         $req_body = (object)[];
-        $req_body->user = $user;
+        $req_body->user = $user->toLogDictionary();
         $req_body->configName = $config;
         $req_body->statsigMetadata = $this->statsigMetadata;
         return $this->post_request("get_config", json_encode($req_body));
     }
 
-    function log_events($events) {
+    function log_events($events)
+    {
         $req_body = (object)[];
         $req_body->events = $events;
         $req_body->statsigMetadata = $this->statsigMetadata;
         return $this->post_request("rgstr", json_encode($req_body));
     }
 
-    function post_request($endpoint, $input) {
+    function post_request($endpoint, $input)
+    {
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => "https://statsigapi.net/v1/{$endpoint}",
