@@ -82,7 +82,7 @@ class E2ETest extends TestCase {
                     $eval_result = $this->evaluator->checkGate($statsig_user, $name);
                     $server_result = $gate["value"];
                     if ($name !== 'test_id_list' && $name !== 'test_not_in_id_list') {
-                        $this->assertEquals($server_result, $eval_result->boolValue);
+                        $this->assertEquals($server_result, $eval_result->boolValue, "Failed value comparison for gate: ".$name);
                         $this->assertEquals($gate["rule_id"], $eval_result->ruleID);
                         $this->assertEquals($gate["secondary_exposures"], $eval_result->secondaryExposures);
                     }
