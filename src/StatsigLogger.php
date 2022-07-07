@@ -5,20 +5,22 @@ namespace Statsig;
 class StatsigLogger {
     private $events = [];
     private $file;
+    private $network;
 
-    function __construct($options) {
+    function __construct($options, $net) {
+        $this->network = $net;
+        if ($options->getLogOutputFile() == null) {
+            $this->file = null;
+            return;
+        }
         try {
             $fileName = $options->getLogOutputFile();
             $open = @fopen($fileName, 'ab');
             if ($open !== false) {
                 $this->file = $open;
                 chmod($fileName, 0644);
-            } else {
-                echo "Failed to open statsig log file, dropping logs for this request";
             }
         } catch ( Exception $e ) {
-            echo "Failed to open statsig log file, dropping logs for this request";
-            echo $e->getMessage();
             $this->file = null;
         } 
     }
@@ -79,16 +81,11 @@ class StatsigLogger {
                 $content .= "\n";
 
                 $written = @fwrite($this->file, $content);
-                if ($written < strlen($content)) {
-                    echo "Wrote ".$written." of ".strlen($content). " total.  Statsig log file may be corrupted.";
-                }
-            } catch (Exception $e) {
-                echo "Failed to write statsig events for this request";
-                echo $e->getMessage();
-            }
+            } catch (Exception $e) {}
             return;
+        } else {
+            $this->network->log_events($events);
         }
-        $this->network->log_events($events);
     }
 
 }

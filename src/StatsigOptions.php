@@ -6,11 +6,16 @@ class StatsigOptions {
     private $configFile;
     private $logOutputFile;
 
-    function __construct($configFile, $logOutput) {
+    function __construct($configFile, $logOutput = null) {
         if ($configFile[0] !== '/') {
             $configFile = __DIR__ . '/' . $configFile;
         }
         $this->configFile = $configFile;
+
+        if (empty($logOutput)) {
+            $this->logOutputFile = null;
+            return;
+        }
 
         if ($logOutput[0] !== '/') {
             $logOutput = __DIR__ . '/' . $logOutput;

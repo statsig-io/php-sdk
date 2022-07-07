@@ -19,13 +19,8 @@ class StatsigStore {
     
                 $this->gates = $specs["gates"];
                 $this->configs = $specs["configs"];
-            } else {
-                echo "Failed to read statsig config file, returning default values";
             }
-        } catch (Exception $e) {
-            echo "Failed to read statsig config file, returning default values";
-            echo $e->getMessage();
-        }
+        } catch (Exception $e) {}
     }
 
     function getGateDefinition($gate) {

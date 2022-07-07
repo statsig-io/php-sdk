@@ -33,20 +33,33 @@ class E2ETest extends TestCase {
 
         $net = new StatsigNetwork();
         $net->setSDKKey($key);
-        $this->evaluator = new Evaluator(new StatsigOptions("../statsig.config", "../statsig.log"));
-
         $this->cases = $net->post_request('rulesets_e2e_test', json_encode((object)[]));
-        $this->statsig = new StatsigServer($key, new StatsigOptions("../statsig.config", "../statsig.log"));
+        
     }
 
     public function tearDown() {
         unlink("statsig.config");
+    }
+
+    public function testWithoutLogFile() {
+        $options = new StatsigOptions("../statsig.config");
+        $this->evaluator = new Evaluator($options);
+        $this->statsig = new StatsigServer($this->key, $options);
+        $this->helper();
+        $this->statsig->flush();
+    }
+
+    public function testWithLogFile() {
+        $options = new StatsigOptions("../statsig.config", "../statsig.log");
+        $this->evaluator = new Evaluator($options);
+        $this->statsig = new StatsigServer($this->key, $options);
+        $this->helper();
         $out = null;
         // send.php will unlink the log file
         exec("php send.php --secret ".$this->key." --file statsig.log 2>&1", $out);
     }
 
-    public function testCases() {
+    private function helper() {
         foreach ($this->cases as $entry) {
             foreach ($entry as $val) {
                 $user = $val["user"];
