@@ -125,7 +125,9 @@ class Evaluator {
                 $salt = array_key_exists("salt", $additional_values) ? $additional_values["salt"] : "";
                 $salt = $this->getValueAsString($salt);
                 $unit_id = $this->getUnitID($user, $idType);
-                $value = floatval(gmp_mod($this->computeUserHash(sprintf("%s.%s", $salt, $unit_id)), 1000));
+                $hash = $this->computeUserHash(sprintf("%s.%s", $salt, $unit_id));
+                // substr -3 == mod 1000
+                $value = intval(substr($hash, -3));
                 break;
             case 'unit_id':
                 $value = $this->getUnitID($user, $idType);
@@ -368,15 +370,16 @@ class Evaluator {
     function evalPassPercentage($user, $rule, $config) {
         $id_type = array_key_exists("idType", $rule) ? $rule["idType"] : "";
         $unit_id = $this->getUnitID($user, $id_type) ?? "";
-        $hash = $this->computeUserHash(
-            sprintf(
-                "%s.%s.%s",
-                $config["salt"],
-                $rule["salt"] ?? $rule["id"],
-                $unit_id
-            ));
+        $salted_id = sprintf(
+            "%s.%s.%s",
+            $config["salt"],
+            $rule["salt"] ?? $rule["id"],
+            $unit_id
+        );
+        $hash = $this->computeUserHash($salted_id);
         return (
-            intval(gmp_mod($hash, 10000)) < $rule["passPercentage"] * 100
+            // substr -4 == mod 10000
+            intval(substr($hash, -4)) < ($rule["passPercentage"] * 100)
         );
     }
 
@@ -489,6 +492,47 @@ class Evaluator {
     function computeUserHash($val) {
         $hash = hash("sha256", $val, True); 
         $hex = bin2hex(substr($hash, 0, 8));
-        return gmp_init($hex, 16);
+        
+        return $this->base_convert_to_string($hex, 16, 10);
+    }
+
+    /**
+     * We can't use the built in base_convert because it loses precision on large numbers
+     * https://www.php.net/manual/en/function.base-convert.php
+     * 
+     * So, our options become either to 1) require gmp, or 2) roll our own way
+     * we just need the last few digits to determine bucketing, so creating a string
+     * and then taking the substring down to the digits we need is enough
+     * we only need up to the 10000 digit, which can then be represented as an integer again
+     * Implemenetation from: https://stackoverflow.com/questions/5301034/how-to-generate-random-64-bit-value-as-decimal-string-in-php/5302533#5302533
+     */
+    function base_convert_to_string($number, $fromBase, $toBase) {
+        $digits = '0123456789abcdefghijklmnopqrstuvwxyz';
+        $length = strlen($number);
+        $result = '';
+
+        $nibbles = array();
+        for ($i = 0; $i < $length; ++$i) {
+            $nibbles[$i] = strpos($digits, $number[$i]);
+        }
+
+        do {
+            $value = 0;
+            $newlen = 0;
+            for ($i = 0; $i < $length; ++$i) {
+                $value = $value * $fromBase + $nibbles[$i];
+                if ($value >= $toBase) {
+                    $nibbles[$newlen++] = (int)($value / $toBase);
+                    $value %= $toBase;
+                }
+                else if ($newlen > 0) {
+                    $nibbles[$newlen++] = 0;
+                }
+            }
+            $length = $newlen;
+            $result = $digits[$value].$result;
+        }
+        while ($newlen != 0);
+        return $result;
     }
 }
