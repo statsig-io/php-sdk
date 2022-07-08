@@ -17,9 +17,10 @@ class StatsigServer {
 
     function __construct($sdk_key, $options) {
         $this->evaluator = new Evaluator($options);
-        $this->logger = new StatsigLogger($options);
         $this->network = new StatsigNetwork();
         $this->network->setSdkKey($sdk_key);
+
+        $this->logger = new StatsigLogger($options, $this->network);
     }
 
     function __destruct() {

@@ -84,6 +84,8 @@ class StatsigNetwork
             CURLOPT_HTTPHEADER => array(
                 "STATSIG-API-KEY: {$this->key}",
                 "STATSIG-SERVER-SESSION-ID: {$this->sessionID}",
+                "STATSIG-SDK-TYPE: {$this->statsigMetadata->sdkType}",
+                "STATSIG-SDK-VERSION: {$this->statsigMetadata->sdkVersion}",
                 'Content-Type: application/json'
             ),
         ));
