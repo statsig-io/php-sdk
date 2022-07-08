@@ -82,7 +82,6 @@ class StatsigLogger {
 
                 $written = @fwrite($this->file, $content);
             } catch (Exception $e) {}
-            return;
         } else {
             $this->network->log_events($events);
         }
