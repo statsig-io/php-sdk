@@ -23,7 +23,7 @@ class StatsigNetwork
     private $key;
     private $statsigMetadata;
     private $sessionID;
-    function __construct($version = "0.2.2")
+    function __construct($version = "0.3.0")
     {
         $metadata = (object)[];
         $metadata->sdkType = "php-server";
