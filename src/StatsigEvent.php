@@ -4,9 +4,9 @@ namespace Statsig;
 
 class StatsigEvent {
     private $eventName;
-    private $user;
     private $value;
     private $metadata;
+    public $user;
 
     function __construct($name) {
         $this->eventName = $name;

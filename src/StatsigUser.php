@@ -16,7 +16,7 @@ class StatsigUser {
 
     private $statsigEnvironment;
 
-    function __construct($userID) {
+    function __construct($userID = null) {
         $this->userID = $userID;
     }
 

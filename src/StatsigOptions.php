@@ -5,6 +5,7 @@ namespace Statsig;
 class StatsigOptions {
     private $configFile;
     private $logOutputFile;
+    public $tier;
 
     function __construct($configFile, $logOutput = null) {
         if ($configFile[0] !== '/') {
@@ -29,5 +30,9 @@ class StatsigOptions {
 
     function getLogOutputFile() {
         return $this->logOutputFile;
+    }
+
+    function setEnvironmentTier($tier) {
+        $this->tier = $tier;
     }
 }
