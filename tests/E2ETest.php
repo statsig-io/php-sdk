@@ -2,6 +2,7 @@
 
 namespace Statsig\Test;
 
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Statsig\Evaluator;
 use Statsig\StatsigServer;
@@ -10,37 +11,40 @@ use Statsig\StatsigUser;
 use Statsig\StatsigOptions;
 use Statsig\StatsigEvent;
 
-class E2ETest extends TestCase {
+class E2ETest extends TestCase
+{
+    private StatsigServer $statsig;
+    private Evaluator $evaluator;
+    private array $cases;
+    private string $key;
 
-    private $evaluator;
-    private $cases;
-    private $key;
-
-    public function setUp() {
+    /**
+     * @throws Exception when test_api_key is not set as an EnvironmentVariable
+     */
+    public function setUp()
+    {
         $key = getenv("test_api_key");
-        if (!$key || $key === null || strlen($key === 0)) {
-            try {
-                $key = file_get_contents(__DIR__.'/../../ops/secrets/prod_keys/statsig-rulesets-eval-consistency-test-secret.key');
-            } catch (Exception $e) {
-                throw new Exception("THIS TEST IS EXPECTED TO FAIL FOR NON-STATSIG EMPLOYEES! If this is the" +
-                "only test failing, please proceed to submit a pull request. If you are a Statsig employee," +
+        if (!$key || strlen($key) === 0) {
+            throw new Exception("THIS TEST IS EXPECTED TO FAIL FOR NON-STATSIG EMPLOYEES! If this is the" .
+                "only test failing, please proceed to submit a pull request. If you are a Statsig employee," .
                 "chat with jkw.");
-            }
         }
         $this->key = $key;
         $out = null;
-        exec("php sync.php --secret ".$key." --output statsig.config 2>&1", $out);
+        exec("php sync.php --secret " . $key . " --output statsig.config 2>&1", $out);
 
         $net = new StatsigNetwork();
         $net->setSDKKey($key);
         $this->cases = $net->post_request('rulesets_e2e_test', json_encode((object)[]));
     }
 
-    public function tearDown() {
+    public function tearDown()
+    {
         unlink("statsig.config");
     }
 
-    public function testWithoutLogFile() {
+    public function testWithoutLogFile()
+    {
         $options = new StatsigOptions("../statsig.config");
         $this->evaluator = new Evaluator($options);
         $this->statsig = new StatsigServer($this->key, $options);
@@ -48,17 +52,19 @@ class E2ETest extends TestCase {
         $this->statsig->flush();
     }
 
-    public function testWithLogFile() {
+    public function testWithLogFile()
+    {
         $options = new StatsigOptions("../statsig.config", "../statsig.log");
         $this->evaluator = new Evaluator($options);
         $this->statsig = new StatsigServer($this->key, $options);
         $this->helper();
         $out = null;
         // send.php will unlink the log file
-        exec("php send.php --secret ".$this->key." --file statsig.log 2>&1", $out);
+        exec("php send.php --secret " . $this->key . " --file statsig.log 2>&1", $out);
     }
 
-    private function helper() {
+    private function helper()
+    {
         foreach ($this->cases as $entry) {
             foreach ($entry as $val) {
                 $user = $val["user"];
@@ -94,9 +100,9 @@ class E2ETest extends TestCase {
                     $eval_result = $this->evaluator->checkGate($statsig_user, $name);
                     $server_result = $gate["value"];
                     if ($name !== 'test_id_list' && $name !== 'test_not_in_id_list') {
-                        $this->assertEquals($server_result, $eval_result->boolValue, "Failed value comparison for gate: ".$name);
-                        $this->assertEquals($gate["rule_id"], $eval_result->ruleID);
-                        $this->assertEquals($gate["secondary_exposures"], $eval_result->secondaryExposures);
+                        $this->assertEquals($server_result, $eval_result->bool_value, "Failed value comparison for gate: " . $name);
+                        $this->assertEquals($gate["rule_id"], $eval_result->rule_id);
+                        $this->assertEquals($gate["secondary_exposures"], $eval_result->secondary_exposures);
                     }
                 }
 
@@ -106,9 +112,9 @@ class E2ETest extends TestCase {
                     $this->statsig->getConfig($statsig_user, $name);
                     $eval_result = $this->evaluator->getConfig($statsig_user, $name);
                     $server_result = $config["value"];
-                    $this->assertEquals($server_result, $eval_result->jsonValue);
-                    $this->assertEquals($config["rule_id"], $eval_result->ruleID);
-                    $this->assertEquals($config["secondary_exposures"], $eval_result->secondaryExposures);
+                    $this->assertEquals($server_result, $eval_result->json_value);
+                    $this->assertEquals($config["rule_id"], $eval_result->rule_id);
+                    $this->assertEquals($config["secondary_exposures"], $eval_result->secondary_exposures);
                 }
             }
         }

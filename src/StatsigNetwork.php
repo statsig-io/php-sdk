@@ -3,6 +3,8 @@
 namespace Statsig;
 
 // From https://www.uuidgenerator.net/dev-corner/php
+use Exception;
+
 function guidv4($data = null)
 {
     // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
@@ -20,16 +22,16 @@ function guidv4($data = null)
 
 class StatsigNetwork
 {
-    private $key;
-    private $statsigMetadata;
-    private $sessionID;
+    private string $key;
+    private array $statsig_metadata;
+    private string $session_id;
     function __construct($version = "0.3.1")
     {
-        $metadata = (object)[];
-        $metadata->sdkType = "php-server";
-        $metadata->sdkVersion = $version;
-        $this->statsigMetadata = $metadata;
-        $this->sessionID = guidv4();
+        $this->statsig_metadata = [
+            'sdkType' => 'php-server',
+            'sdkVersion' => $version
+        ];
+        $this->session_id = guidv4();
     }
 
     function setSdkKey($key)
@@ -44,27 +46,31 @@ class StatsigNetwork
 
     function checkGate(StatsigUser $user, string $gate)
     {
-        $req_body = (object)[];
-        $req_body->user = $user->toLogDictionary();
-        $req_body->gateName = $gate;
-        $req_body->statsigMetadata = $this->statsigMetadata;
+        $req_body = [
+            'user' => $user->toLogDictionary(),
+            'gateName' => $gate,
+            'statsigMetadata' => $this->statsig_metadata
+        ];
+
         return $this->post_request("check_gate", json_encode($req_body));
     }
 
     function getConfig(StatsigUser $user, string $config)
     {
-        $req_body = (object)[];
-        $req_body->user = $user->toLogDictionary();
-        $req_body->configName = $config;
-        $req_body->statsigMetadata = $this->statsigMetadata;
+        $req_body = [
+            'user' => $user->toLogDictionary(),
+            'configName' => $config,
+            'statsigMetadata' => $this->statsig_metadata
+        ];
         return $this->post_request("get_config", json_encode($req_body));
     }
 
     function log_events($events)
     {
-        $req_body = (object)[];
-        $req_body->events = $events;
-        $req_body->statsigMetadata = $this->statsigMetadata;
+        $req_body = [
+            'events' => $events,
+            'statsigMetadata' => $this->statsig_metadata
+        ];
         return $this->post_request("rgstr", json_encode($req_body));
     }
 
@@ -83,9 +89,9 @@ class StatsigNetwork
             CURLOPT_POSTFIELDS => $input,
             CURLOPT_HTTPHEADER => array(
                 "STATSIG-API-KEY: {$this->key}",
-                "STATSIG-SERVER-SESSION-ID: {$this->sessionID}",
-                "STATSIG-SDK-TYPE: {$this->statsigMetadata->sdkType}",
-                "STATSIG-SDK-VERSION: {$this->statsigMetadata->sdkVersion}",
+                "STATSIG-SERVER-SESSION-ID: {$this->session_id}",
+                "STATSIG-SDK-TYPE: {$this->statsig_metadata['sdkType']}",
+                "STATSIG-SDK-VERSION: {$this->statsig_metadata['sdkVersion']}",
                 'Content-Type: application/json'
             ),
         ));

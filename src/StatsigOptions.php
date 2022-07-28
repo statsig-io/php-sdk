@@ -2,37 +2,43 @@
 
 namespace Statsig;
 
-class StatsigOptions {
-    private $configFile;
-    private $logOutputFile;
-    public $tier;
+class StatsigOptions
+{
+    public ?string $tier = null;
 
-    function __construct($configFile, $logOutput = null) {
-        if ($configFile[0] !== '/') {
-            $configFile = __DIR__ . '/' . $configFile;
+    private string $config_file_path;
+    private ?string $logging_file_path;
+
+    function __construct(string $config_file_path, ?string $logging_file_path = null)
+    {
+        if ($config_file_path[0] !== '/') {
+            $config_file_path = __DIR__ . '/' . $config_file_path;
         }
-        $this->configFile = $configFile;
+        $this->config_file_path = $config_file_path;
 
-        if (empty($logOutput)) {
-            $this->logOutputFile = null;
+        if (empty($logging_file_path)) {
+            $this->logging_file_path = null;
             return;
         }
 
-        if ($logOutput[0] !== '/') {
-            $logOutput = __DIR__ . '/' . $logOutput;
+        if ($logging_file_path[0] !== '/') {
+            $logging_file_path = __DIR__ . '/' . $logging_file_path;
         }
-        $this->logOutputFile = $logOutput;
+        $this->logging_file_path = $logging_file_path;
     }
 
-    function getConfigFile() {
-        return $this->configFile;
+    function getConfigFilePath(): string
+    {
+        return $this->config_file_path;
     }
 
-    function getLogOutputFile() {
-        return $this->logOutputFile;
+    function getLoggingFilePath(): ?string
+    {
+        return $this->logging_file_path;
     }
 
-    function setEnvironmentTier($tier) {
+    function setEnvironmentTier(?string $tier)
+    {
         $this->tier = $tier;
     }
 }

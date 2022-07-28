@@ -2,20 +2,15 @@
 
 namespace Statsig;
 
-use Statsig\StatsigNetwork;
-use Statsig\Evaluator;
-use Statsig\StatsigLogger;
-use Statsig\StatsigEvent;
-use Statsig\DynamicConfig;
+class StatsigServer
+{
+    private StatsigNetwork $network;
+    private StatsigLogger $logger;
+    private Evaluator $evaluator;
+    private StatsigOptions $options;
 
-class StatsigServer {
-
-    private $network;
-    private $logger;
-    private $evaluator;
-    private $options;
-
-    function __construct($sdk_key, $options) {
+    function __construct(string $sdk_key, StatsigOptions $options)
+    {
         $this->evaluator = new Evaluator($options);
         $this->network = new StatsigNetwork();
         $this->network->setSdkKey($sdk_key);
@@ -24,67 +19,72 @@ class StatsigServer {
         $this->options = $options;
     }
 
-    function __destruct() {
+    function __destruct()
+    {
         $this->logger->flush();
     }
 
-    function checkGate($user, $gate) {
+    function checkGate(StatsigUser $user, string $gate): bool
+    {
         $user = $this->normalizeUser($user);
         $res = $this->evaluator->checkGate($user, $gate);
-        if ($res->fetchFromServer) {
+        if ($res->fetch_from_server) {
             $net_result = $this->network->checkGate($user, $gate);
-            return $net_result["value"];
+            return key_exists("value", $net_result ?? []) && $net_result["value"] === true;
         }
         $this->logger->logGateExposure(
             $user,
             $gate,
-            $res->boolValue,
-            $res->ruleID,
-            $res->secondaryExposures,
+            $res->bool_value,
+            $res->rule_id,
+            $res->secondary_exposures,
         );
-        return $res->boolValue;
+        return $res->bool_value;
     }
 
-    function getConfig($user, $config) {
+    function getConfig(StatsigUser $user, string $config): DynamicConfig
+    {
         $user = $this->normalizeUser($user);
         $res = $this->evaluator->getConfig($user, $config);
-        if ($res->fetchFromServer) {
+        if ($res->fetch_from_server) {
             $net_result = $this->network->getConfig($user, $config);
-            return new DynamicConfig($config, $net_result["value"], $net_result["rule_id"]);
+            if (key_exists("value", $net_result ?? []) && gettype($net_result["value"]) === 'array') {
+                return new DynamicConfig($config, $net_result["value"], $net_result["rule_id"]);
+            }
+            return new DynamicConfig($config);
         }
         $this->logger->logConfigExposure(
             $user,
             $config,
-            $res->ruleID,
-            $res->secondaryExposures,
+            $res->rule_id,
+            $res->secondary_exposures,
         );
-        return new DynamicConfig($config, $res->jsonValue, $res->ruleID);
+        return new DynamicConfig($config, $res->json_value, $res->rule_id);
     }
 
-    function getExperiment($user, $experiment) {
+    function getExperiment(StatsigUser $user, string $experiment): DynamicConfig
+    {
         $user = $this->normalizeUser($user);
         return $this->getConfig($user, $experiment);
     }
 
-    function logEvent($event) {
+    function logEvent(StatsigEvent $event)
+    {
         if ($this->options->tier !== null) {
-            $event->user["statsigEnvironment"] = ["tier" => $this->options->tier];
+            $event->user['statsigEnvironment'] = ["tier" => $this->options->tier];
         }
         $this->logger->log($event);
     }
 
-    function flush() {
+    function flush()
+    {
         $this->logger->flush();
     }
 
-    function normalizeUser($user) {
-        $new_user;
-        if ($user == null) {
-            $new_user = StatsigUser();
-        } else {
-            $new_user = clone $user;
-        }
-        
+    private function normalizeUser($user)
+    {
+        $new_user = $user == null ? new StatsigUser() : clone $user;
+
         if ($this->options->tier !== null) {
             $new_user->setStatsigEnvironment(["tier" => $this->options->tier]);
         }

@@ -5,11 +5,12 @@ namespace Statsig\Test;
 use PHPUnit\Framework\TestCase;
 use Statsig\DynamicConfig;
 
-class DynamicConfigTest extends TestCase {
+class DynamicConfigTest extends TestCase
+{
+    private DynamicConfig $config;
 
-    private $config;
-
-    public function setUp() {
+    public function setUp()
+    {
         $this->config = new DynamicConfig("test_config", [
             "bool" => true,
             "number" => 2,
@@ -27,7 +28,8 @@ class DynamicConfigTest extends TestCase {
         ], "default");
     }
 
-    public function testKeyNotFound() {
+    public function testKeyNotFound()
+    {
         $this->assertEquals(null, $this->config->get("key_not_found", null));
         $this->assertEquals(true, $this->config->get("key_not_found", true));
         $this->assertEquals(12, $this->config->get("key_not_found", 12));
@@ -36,12 +38,13 @@ class DynamicConfigTest extends TestCase {
         $this->assertEquals(["test" => 123], $this->config->get("key_not_found", ["test" => 123],));
     }
 
-    public function testHelpers() {
+    public function testHelpers()
+    {
         $this->assertEquals([
             "bool" => true,
             "number" => 2,
             "string" => "string",
-            "object" => [
+            "object" => (object) [
                 "key" => "value",
                 "key2" => 123,
             ],
@@ -56,7 +59,8 @@ class DynamicConfigTest extends TestCase {
         $this->assertEquals("default", $this->config->getRuleID());
     }
 
-    public function testMatchingTypes() {
+    public function testMatchingTypes()
+    {
         $this->assertEquals("true", $this->config->get("boolStr1", "unused"));
         $this->assertEquals("true", $this->config->get("boolStr1", null));
 
@@ -66,11 +70,11 @@ class DynamicConfigTest extends TestCase {
         $this->assertEquals(true, $this->config->get("bool", false));
         $this->assertEquals(true, $this->config->get("bool", null));
 
-        $this->assertEquals([
+        $this->assertEquals((object) [
             "key" => "value",
             "key2" => 123,
-        ], $this->config->get("object", []));
-        $this->assertEquals([
+        ], $this->config->get("object", (object) []));
+        $this->assertEquals((object) [
             "key" => "value",
             "key2" => 123,
         ], $this->config->get("object", null));
@@ -79,7 +83,8 @@ class DynamicConfigTest extends TestCase {
         $this->assertEquals([1, 2, "three"], $this->config->get("array", null));
     }
 
-    public function testMismatch() {
+    public function testMismatch()
+    {
         $this->assertEquals(123, $this->config->get("boolStr1", 123));
         $this->assertEquals("str", $this->config->get("number", "str"));
         $this->assertEquals("a string", $this->config->get("bool", "a string"));

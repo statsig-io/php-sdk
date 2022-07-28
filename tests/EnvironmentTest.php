@@ -8,44 +8,46 @@ use Statsig\StatsigOptions;
 use Statsig\StatsigUser;
 use Statsig\StatsigEvent;
 
-class EnvironmentTest extends TestCase {
+class EnvironmentTest extends TestCase
+{
+    private StatsigServer $statsig;
+    private StatsigUser  $statsig_user;
 
-    private $statsig;
-
-    public function setUp() {
-        $options = new StatsigOptions(__DIR__."/../tests/testdata.config", __DIR__."/../tests/testdata.log");
+    public function setUp()
+    {
+        $options = new StatsigOptions(__DIR__ . "/../tests/testdata.config", __DIR__ . "/../tests/testdata.log");
         $options->setEnvironmentTier("development");
         $this->statsig = new StatsigServer("secret-test", $options);
-        $this->statsigUser = new StatsigUser("123");
-        $this->statsigUser->setEmail("testuser@statsig.com");
+        $this->statsig_user = new StatsigUser("123");
+        $this->statsig_user->setEmail("testuser@statsig.com");
     }
 
-    public function testAll() {
-        $on = $this->statsig->checkGate($this->statsigUser, "always_on_gate");
+    public function testAll()
+    {
+        $on = $this->statsig->checkGate($this->statsig_user, "always_on_gate");
         $this->assertEquals(true, $on);
 
-        $dc = $this->statsig->getConfig($this->statsigUser, "test_config");
-
+        $this->statsig->getConfig($this->statsig_user, "test_config");
 
         $event_default_time = new StatsigEvent("test1");
         $this->statsig->logEvent($event_default_time);
 
         $this->statsig->flush();
 
-        $this->assertEquals(true, file_exists(__DIR__."/testdata.log"));
-        $contents = file_get_contents(__DIR__."/testdata.log");
+        $this->assertEquals(true, file_exists(__DIR__ . "/testdata.log"));
+        $contents = file_get_contents(__DIR__ . "/testdata.log");
         $lines = explode("\n", $contents);
-        $this->assertEquals(2, count($lines)); // 1 flush and a new line :)
+        $this->assertCount(2, $lines); // 1 flush and a new line :)
         $events = [];
         foreach ($lines as $line) {
             if (!trim($line)) {
                 continue;
             }
-            
+
             $json = json_decode($line, true);
             $events = array_merge($events, $json);
         }
-        $this->assertEquals(3, count($events));
+        $this->assertCount(3, $events);
 
         $this->verifyExposure(
             $events[0],
@@ -84,7 +86,8 @@ class EnvironmentTest extends TestCase {
         $this->assertLessThanOrEqual(round(microtime(true) * 1000), $event["time"]);
     }
 
-    public function tearDown() {
-        unlink(__DIR__."/testdata.log");
+    public function tearDown()
+    {
+        unlink(__DIR__ . "/testdata.log");
     }
 }

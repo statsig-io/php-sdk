@@ -8,12 +8,13 @@ use Statsig\StatsigOptions;
 use Statsig\StatsigUser;
 use Statsig\StatsigEvent;
 
-class StatsigServerTest extends TestCase {
+class StatsigServerTest extends TestCase
+{
+    private StatsigServer $statsig;
 
-    private $statsig;
-
-    public function setUp() {
-        $this->statsig = new StatsigServer("secret-test", new StatsigOptions(__DIR__."/../tests/testdata.config", __DIR__."/../tests/testdata.log"));
+    public function setUp()
+    {
+        $this->statsig = new StatsigServer("secret-test", new StatsigOptions(__DIR__ . "/../tests/testdata.config", __DIR__ . "/../tests/testdata.log"));
         $this->statsigUser = new StatsigUser("123");
         $this->statsigUser->setEmail("testuser@statsig.com");
         $this->randomUser = new StatsigUser("random");
@@ -22,7 +23,8 @@ class StatsigServerTest extends TestCase {
         ));
     }
 
-    public function testAll() {
+    public function testAll()
+    {
         $on = $this->statsig->checkGate($this->statsigUser, "always_on_gate");
         $this->assertEquals(true, $on);
 
@@ -73,20 +75,20 @@ class StatsigServerTest extends TestCase {
 
         $this->statsig->flush();
 
-        $this->assertEquals(true, file_exists(__DIR__."/testdata.log"));
-        $contents = file_get_contents(__DIR__."/testdata.log");
+        $this->assertEquals(true, file_exists(__DIR__ . "/testdata.log"));
+        $contents = file_get_contents(__DIR__ . "/testdata.log");
         $lines = explode("\n", $contents);
-        $this->assertEquals(5, count($lines)); // 4 flushes and a new line :)
+        $this->assertCount(5, $lines); // 4 flushes and a new line :)
         $events = [];
         foreach ($lines as $line) {
             if (!trim($line)) {
                 continue;
             }
-            
+
             $json = json_decode($line, true);
             $events = array_merge($events, $json);
         }
-        $this->assertEquals(11, count($events));
+        $this->assertCount(11, $events);
 
         $this->verifyExposure(
             $events[0],
@@ -183,7 +185,6 @@ class StatsigServerTest extends TestCase {
         $this->assertEquals($time, $events[10]["time"]);
         $this->assertEquals("test_value", $events[10]["value"]);
         $this->assertEquals("world", $events[10]["metadata"]["hello"]);
-
     }
 
     public function verifyExposure(
@@ -199,7 +200,8 @@ class StatsigServerTest extends TestCase {
         $this->assertLessThanOrEqual(round(microtime(true) * 1000), $event["time"]);
     }
 
-    public function tearDown() {
-        unlink(__DIR__."/testdata.log");
+    public function tearDown()
+    {
+        unlink(__DIR__ . "/testdata.log");
     }
 }

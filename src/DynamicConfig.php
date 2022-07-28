@@ -2,36 +2,53 @@
 
 namespace Statsig;
 
-class DynamicConfig {
+class DynamicConfig
+{
+    private string $name;
+    private array $value;
+    private string $rule_id;
+    private array $secondary_exposures;
 
-    private $name;
-    private $jsonValue;
-    private $ruleID;
-    private $secondaryExposures;
-
-    function __construct($name, $jsonValue = [], $ruleID = "", $secondaryExposures = []) {
+    function __construct(string $name, array $value = [], string $rule_id = "", array $secondary_exposures = [])
+    {
         $this->name = $name;
-        $this->jsonValue = $jsonValue;
-        $this->ruleID = $ruleID;
-        $this->secondaryExposures = $secondaryExposures;
+        $this->rule_id = $rule_id;
+        $this->secondary_exposures = $secondary_exposures;
+
+        // We re-decode here to treat associative arrays as objects, this allows us
+        // to differentiate between array ([1,2]) and object (['a' => 'b'])
+        $this->value = (array) json_decode(json_encode($value));
     }
 
-    function get($field, $default) {
-        if (!array_key_exists($field, $this->jsonValue)) {
+    function get(string $field, $default)
+    {
+        if (!array_key_exists($field, $this->value)) {
             return $default;
         }
-        $val = $this->jsonValue[$field];
+        $val = $this->value[$field];
         if ($default !== null && gettype($val) !== gettype($default)) {
             return $default;
         }
         return $val;
     }
 
-    function getValue() {
-        return $this->jsonValue;
+    function getName(): string
+    {
+        return $this->name;
     }
 
-    function getRuleID() {
-        return $this->ruleID;
+    function getValue(): array
+    {
+        return $this->value;
+    }
+
+    function getRuleID(): string
+    {
+        return $this->rule_id;
+    }
+
+    function getSecondaryExposures(): array
+    {
+        return $this->secondary_exposures;
     }
 }

@@ -2,35 +2,40 @@
 
 namespace Statsig;
 
-class StatsigStore {
-    private $file;
-    private $specs;
-    private $gates;
+use Exception;
 
-    function __construct($file) {
+class StatsigStore
+{
+    private array $gates;
+    private array $configs;
+
+    function __construct(string $config_file_path)
+    {
         $this->gates = [];
         $this->configs = [];
-        $this->file = null;
+
         try {
-            $contents = @file_get_contents($file);
+            $contents = @file_get_contents($config_file_path);
             if ($contents !== false) {
-                $this->file = $file;
                 $specs = json_decode($contents, true);
-    
+
                 $this->gates = $specs["gates"];
                 $this->configs = $specs["configs"];
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+        }
     }
 
-    function getGateDefinition($gate) {
+    function getGateDefinition(string $gate)
+    {
         if (!array_key_exists($gate, $this->gates)) {
             return null;
         }
         return $this->gates[$gate];
     }
 
-    function getConfigDefinition($config) {
+    function getConfigDefinition(string $config)
+    {
         if (!array_key_exists($config, $this->configs)) {
             return null;
         }

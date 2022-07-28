@@ -2,89 +2,101 @@
 
 namespace Statsig;
 
-class StatsigLogger {
-    private $events = [];
-    private $file;
-    private $network;
+use Exception;
 
-    function __construct($options, $net) {
+class StatsigLogger
+{
+    private array $events = [];
+    private StatsigNetwork $network;
+    private $logging_output_file;
+
+    function __construct(StatsigOptions  $options, StatsigNetwork $net)
+    {
         $this->network = $net;
-        if ($options->getLogOutputFile() == null) {
-            $this->file = null;
+
+        if ($options->getLoggingFilePath() == null) {
+            $this->logging_output_file = null;
             return;
         }
+
         try {
-            $fileName = $options->getLogOutputFile();
-            $open = @fopen($fileName, 'ab');
+            $file_name = $options->getLoggingFilePath();
+            $open = @fopen($file_name, 'ab');
             if ($open !== false) {
-                $this->file = $open;
-                chmod($fileName, 0644);
+                $this->logging_output_file = $open;
+                chmod($file_name, 0644);
             }
-        } catch ( Exception $e ) {
-            $this->file = null;
-        } 
+        } catch (Exception $e) {
+            $this->logging_output_file = null;
+        }
     }
 
-    public function __destruct() {
-        if ($this->file === null) {
+    public function __destruct()
+    {
+        if ($this->logging_output_file === null) {
             return;
         }
         $this->flush();
-        fclose($this->file);
+        fclose($this->logging_output_file);
     }
 
-    function log($event) {
+    function log($event)
+    {
         $this->enqueue($event->toJson());
     }
 
-    function logGateExposure($user, $gate, $boolValue, $ruleID, $secondaryExposures) {
+    function logGateExposure(StatsigUser $user, string $gate, bool $bool_value, string $rule_id, array $secondary_exposures)
+    {
         $exposure = new StatsigEvent("statsig::gate_exposure");
         $exposure->setUser($user);
         $exposure->setMetadata([
             "gate" => $gate,
-            "gateValue" => $boolValue ? "true" : "false",
-            "ruleID" => $ruleID,
+            "gateValue" => $bool_value ? "true" : "false",
+            "ruleID" => $rule_id,
         ]);
         $json = $exposure->toJson();
-        $json->{"secondaryExposures"} = $secondaryExposures;
+        $json->{"secondaryExposures"} = $secondary_exposures;
         $this->enqueue($json);
     }
 
-    function logConfigExposure($user, $config, $ruleID, $secondaryExposures) {
+    function logConfigExposure(StatsigUser $user, string $config, string $rule_id, array $secondary_exposures)
+    {
         $exposure = new StatsigEvent("statsig::config_exposure");
         $exposure->setUser($user);
         $exposure->setMetadata([
             "config" => $config,
-            "ruleID" => $ruleID,
+            "ruleID" => $rule_id,
         ]);
         $json = $exposure->toJson();
-        $json->{"secondaryExposures"} = $secondaryExposures;
+        $json->{"secondaryExposures"} = $secondary_exposures;
         $this->enqueue($json);
     }
 
-    function enqueue($json) {
+    function enqueue($json)
+    {
         $this->events[] = $json;
         if (count($this->events) >= 500) {
             $this->flush();
         }
     }
 
-    function flush() {
+    function flush()
+    {
         if (count($this->events) == 0) {
             return;
         }
         $events = $this->events;
         $this->events = [];
-        if ($this->file !== null) {
+        if ($this->logging_output_file !== null) {
             try {
                 $content = json_encode($events);
                 $content .= "\n";
 
-                $written = @fwrite($this->file, $content);
-            } catch (Exception $e) {}
+                @fwrite($this->logging_output_file, $content);
+            } catch (Exception $e) {
+            }
         } else {
             $this->network->log_events($events);
         }
     }
-
 }
