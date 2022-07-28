@@ -21,7 +21,7 @@
         "ext-curl": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "~4.0"
+        "phpunit/phpunit": "^9.3"
     },
     "support": {
         "issues": "https://github.com/statsig-io/php-sdk/issues",

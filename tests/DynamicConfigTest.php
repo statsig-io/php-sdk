@@ -9,7 +9,7 @@ class DynamicConfigTest extends TestCase
 {
     private DynamicConfig $config;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $this->config = new DynamicConfig("test_config", [
             "bool" => true,

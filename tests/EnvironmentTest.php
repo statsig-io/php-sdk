@@ -13,13 +13,18 @@ class EnvironmentTest extends TestCase
     private StatsigServer $statsig;
     private StatsigUser  $statsig_user;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $options = new StatsigOptions(__DIR__ . "/../tests/testdata.config", __DIR__ . "/../tests/testdata.log");
         $options->setEnvironmentTier("development");
         $this->statsig = new StatsigServer("secret-test", $options);
-        $this->statsig_user = new StatsigUser("123");
+        $this->statsig_user = StatsigUser::withUserID("123");
         $this->statsig_user->setEmail("testuser@statsig.com");
+    }
+
+    protected function tearDown(): void
+    {
+        unlink(__DIR__ . "/testdata.log");
     }
 
     public function testAll()
@@ -84,10 +89,5 @@ class EnvironmentTest extends TestCase
         $this->assertEquals($value, $event["metadata"][$key]);
         $this->assertEquals($ruleID, $event["metadata"]["ruleID"]);
         $this->assertLessThanOrEqual(round(microtime(true) * 1000), $event["time"]);
-    }
-
-    public function tearDown()
-    {
-        unlink(__DIR__ . "/testdata.log");
     }
 }
