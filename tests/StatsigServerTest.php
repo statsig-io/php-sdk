@@ -9,23 +9,29 @@ use Statsig\StatsigServer;
 use Statsig\StatsigOptions;
 use Statsig\StatsigUser;
 use Statsig\StatsigEvent;
+use Throwable;
 
 class StatsigServerTest extends TestCase
 {
     private StatsigServer $statsig;
 
-    public function setUp()
+    protected function setup(): void
     {
         $config_adapter = new LocalFileConfigAdapter("../../tests/testdata.config");
         $logging_adapter = new LocalFileLoggingAdapter("../../tests/testdata.log");
 
         $this->statsig = new StatsigServer("secret-test", new StatsigOptions($config_adapter, $logging_adapter));
-        $this->statsigUser = new StatsigUser("123");
+        $this->statsigUser = StatsigUser::withUserID("123");
         $this->statsigUser->setEmail("testuser@statsig.com");
-        $this->randomUser = new StatsigUser("random");
+        $this->randomUser = StatsigUser::withUserID("random");
         $this->randomUser->setPrivateAttributes(array(
             "test" => "I am private"
         ));
+    }
+
+    protected function tearDown(): void
+    {
+        unlink(__DIR__ . "/testdata.log");
     }
 
     public function testAll()
@@ -190,6 +196,13 @@ class StatsigServerTest extends TestCase
         $this->assertEquals($time, $events[10]["time"]);
         $this->assertEquals("test_value", $events[10]["value"]);
         $this->assertEquals("world", $events[10]["metadata"]["hello"]);
+
+        $bad_user = StatsigUser::withUserID("a_user");
+        $bad_user->setUserID(null);
+
+        self::assertActionThrows(fn () => $this->statsig->checkGate($bad_user, "always_on_gate"));
+        self::assertActionThrows(fn () => $this->statsig->getConfig($bad_user, "test_config"));
+        self::assertActionThrows(fn () => $this->statsig->getExperiment($bad_user, "sample_experiment"));
     }
 
     public function verifyExposure(
@@ -205,8 +218,15 @@ class StatsigServerTest extends TestCase
         $this->assertLessThanOrEqual(round(microtime(true) * 1000), $event["time"]);
     }
 
-    public function tearDown()
+    private static function assertActionThrows($action)
     {
-        unlink(__DIR__ . "/testdata.log");
+        $was_caught = false;
+        try {
+            $action();
+        } catch (Throwable $exception) {
+            $was_caught = true;
+        }
+
+        self::assertTrue($was_caught);
     }
 }

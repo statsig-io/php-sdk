@@ -81,13 +81,14 @@ class StatsigServer
         $this->logger->flush();
     }
 
-    private function normalizeUser($user)
+    private function normalizeUser(StatsigUser $user): StatsigUser
     {
-        $new_user = $user == null ? new StatsigUser() : clone $user;
-
+        $new_user = clone $user;
         if ($this->options->tier !== null) {
             $new_user->setStatsigEnvironment(["tier" => $this->options->tier]);
         }
+
+        $new_user->assertUserIsIdentifiable();
         return $new_user;
     }
 }

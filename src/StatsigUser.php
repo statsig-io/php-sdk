@@ -2,6 +2,8 @@
 
 namespace Statsig;
 
+use Exception;
+
 class StatsigUser
 {
     private ?string $user_id;
@@ -16,9 +18,18 @@ class StatsigUser
     private ?array $custom_ids = null;
     private ?array $statsig_environment = null;
 
-    function __construct(?string $user_id = null)
+    static function withUserID(string $user_id): StatsigUser {
+        return new StatsigUser($user_id);
+    }
+
+    static function withCustomIDs(array $custom_ids): StatsigUser {
+        return new StatsigUser(null, $custom_ids);
+    }
+
+    function setUserID(?string $user_id): StatsigUser
     {
         $this->user_id = $user_id;
+        return $this;
     }
 
     function setEmail(?string $email): StatsigUser
@@ -105,5 +116,21 @@ class StatsigUser
         ];
 
         return array_filter($user);
+    }
+
+    function assertUserIsIdentifiable() {
+        $is_user_empty = $this->user_id === null || trim($this->user_id) === '';
+        $is_customer_ids_empty = $this->custom_ids === null || count($this->custom_ids) === 0;
+        if ($is_user_empty && $is_customer_ids_empty) {
+            throw new Exception("User must have a userID or customID for the server SDK to work. See https://docs.statsig.com/messages/serverRequiredUserID/ for more details.");
+        }
+    }
+
+    private function __construct(?string $user_id = null, ?array $custom_ids = null)
+    {
+        $this->user_id = $user_id;
+        $this->custom_ids = $custom_ids;
+
+        $this->assertUserIsIdentifiable();
     }
 }

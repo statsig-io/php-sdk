@@ -23,7 +23,7 @@ class E2ETest extends TestCase
     /**
      * @throws Exception when test_api_key is not set as an EnvironmentVariable
      */
-    public function setUp()
+    protected function setUp(): void
     {
         $key = getenv("test_api_key");
         if (!$key || strlen($key) === 0) {
@@ -40,7 +40,7 @@ class E2ETest extends TestCase
         $this->cases = $net->post_request('rulesets_e2e_test', json_encode((object)[]));
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         unlink("statsig.config");
     }
@@ -73,7 +73,7 @@ class E2ETest extends TestCase
         foreach ($this->cases as $entry) {
             foreach ($entry as $val) {
                 $user = $val["user"];
-                $statsig_user = new StatsigUser($user["userID"]);
+                $statsig_user = StatsigUser::withUserID($user["userID"]);
                 $statsig_user = $statsig_user
                     ->setAppVersion(array_key_exists("appVersion", $user) ? $user["appVersion"] : null)
                     ->setUserAgent(array_key_exists("userAgent", $user) ? $user["userAgent"] : null)
