@@ -2,39 +2,30 @@
 
 namespace Statsig;
 
+use Statsig\Adapters\IConfigAdapter;
+use Statsig\Adapters\ILoggingAdapter;
+
 class StatsigOptions
 {
     public ?string $tier = null;
 
-    private string $config_file_path;
-    private ?string $logging_file_path;
+    private IConfigAdapter $config_adapter;
+    private ?ILoggingAdapter $logging_adapter;
 
-    function __construct(string $config_file_path, ?string $logging_file_path = null)
+    function __construct(IConfigAdapter $config_adapter, ?ILoggingAdapter $logging_adapter = null)
     {
-        if ($config_file_path[0] !== '/') {
-            $config_file_path = __DIR__ . '/' . $config_file_path;
-        }
-        $this->config_file_path = $config_file_path;
-
-        if (empty($logging_file_path)) {
-            $this->logging_file_path = null;
-            return;
-        }
-
-        if ($logging_file_path[0] !== '/') {
-            $logging_file_path = __DIR__ . '/' . $logging_file_path;
-        }
-        $this->logging_file_path = $logging_file_path;
+        $this->config_adapter = $config_adapter;
+        $this->logging_adapter = $logging_adapter;
     }
 
-    function getConfigFilePath(): string
+    function getConfigAdapter(): IConfigAdapter
     {
-        return $this->config_file_path;
+        return $this->config_adapter;
     }
 
-    function getLoggingFilePath(): ?string
+    function getLoggingAdapter(): ?ILoggingAdapter
     {
-        return $this->logging_file_path;
+        return $this->logging_adapter;
     }
 
     function setEnvironmentTier(?string $tier)

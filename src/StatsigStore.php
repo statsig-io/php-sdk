@@ -2,28 +2,18 @@
 
 namespace Statsig;
 
-use Exception;
+use Statsig\Adapters\IConfigAdapter;
 
 class StatsigStore
 {
     private array $gates;
     private array $configs;
 
-    function __construct(string $config_file_path)
+    function __construct(IConfigAdapter $config_adapter)
     {
-        $this->gates = [];
-        $this->configs = [];
-
-        try {
-            $contents = @file_get_contents($config_file_path);
-            if ($contents !== false) {
-                $specs = json_decode($contents, true);
-
-                $this->gates = $specs["gates"];
-                $this->configs = $specs["configs"];
-            }
-        } catch (Exception $e) {
-        }
+        $specs = $config_adapter->getConfigSpecs();
+        $this->gates = $specs["gates"] ?? [];
+        $this->configs = $specs["configs"] ?? [];
     }
 
     function getGateDefinition(string $gate)

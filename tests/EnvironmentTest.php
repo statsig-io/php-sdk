@@ -3,6 +3,8 @@
 namespace Statsig\Test;
 
 use PHPUnit\Framework\TestCase;
+use Statsig\Adapters\LocalFileConfigAdapter;
+use Statsig\Adapters\LocalFileLoggingAdapter;
 use Statsig\StatsigServer;
 use Statsig\StatsigOptions;
 use Statsig\StatsigUser;
@@ -15,7 +17,9 @@ class EnvironmentTest extends TestCase
 
     public function setUp()
     {
-        $options = new StatsigOptions(__DIR__ . "/../tests/testdata.config", __DIR__ . "/../tests/testdata.log");
+        $config_adapter = new LocalFileConfigAdapter("../../tests/testdata.config");
+        $logging_adapter = new LocalFileLoggingAdapter("../../tests/testdata.log");
+        $options = new StatsigOptions($config_adapter, $logging_adapter);
         $options->setEnvironmentTier("development");
         $this->statsig = new StatsigServer("secret-test", $options);
         $this->statsig_user = new StatsigUser("123");

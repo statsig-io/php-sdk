@@ -3,6 +3,8 @@
 namespace Statsig\Test;
 
 use PHPUnit\Framework\TestCase;
+use Statsig\Adapters\LocalFileConfigAdapter;
+use Statsig\Adapters\LocalFileLoggingAdapter;
 use Statsig\StatsigServer;
 use Statsig\StatsigOptions;
 use Statsig\StatsigUser;
@@ -14,7 +16,10 @@ class StatsigServerTest extends TestCase
 
     public function setUp()
     {
-        $this->statsig = new StatsigServer("secret-test", new StatsigOptions(__DIR__ . "/../tests/testdata.config", __DIR__ . "/../tests/testdata.log"));
+        $config_adapter = new LocalFileConfigAdapter("../../tests/testdata.config");
+        $logging_adapter = new LocalFileLoggingAdapter("../../tests/testdata.log");
+
+        $this->statsig = new StatsigServer("secret-test", new StatsigOptions($config_adapter, $logging_adapter));
         $this->statsigUser = new StatsigUser("123");
         $this->statsigUser->setEmail("testuser@statsig.com");
         $this->randomUser = new StatsigUser("random");

@@ -16,7 +16,7 @@ class Evaluator
 
     function __construct(StatsigOptions $options)
     {
-        $this->store = new StatsigStore($options->getConfigFilePath());
+        $this->store = new StatsigStore($options->getConfigAdapter());
         $this->ua_parser = Parser::create();
         $this->ip3c = new IP3Country();
     }

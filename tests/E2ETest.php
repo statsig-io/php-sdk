@@ -4,6 +4,8 @@ namespace Statsig\Test;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
+use Statsig\Adapters\LocalFileConfigAdapter;
+use Statsig\Adapters\LocalFileLoggingAdapter;
 use Statsig\Evaluator;
 use Statsig\StatsigServer;
 use Statsig\StatsigNetwork;
@@ -45,7 +47,8 @@ class E2ETest extends TestCase
 
     public function testWithoutLogFile()
     {
-        $options = new StatsigOptions("../statsig.config");
+        $adapter = new LocalFileConfigAdapter("../../statsig.config");
+        $options = new StatsigOptions($adapter);
         $this->evaluator = new Evaluator($options);
         $this->statsig = new StatsigServer($this->key, $options);
         $this->helper();
@@ -54,7 +57,9 @@ class E2ETest extends TestCase
 
     public function testWithLogFile()
     {
-        $options = new StatsigOptions("../statsig.config", "../statsig.log");
+        $config_adapter = new LocalFileConfigAdapter("../../statsig.config");
+        $logging_adapter = new LocalFileLoggingAdapter("../../statsig.log");
+        $options = new StatsigOptions($config_adapter, $logging_adapter);
         $this->evaluator = new Evaluator($options);
         $this->statsig = new StatsigServer($this->key, $options);
         $this->helper();
