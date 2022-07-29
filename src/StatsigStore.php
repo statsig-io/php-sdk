@@ -6,29 +6,26 @@ use Statsig\Adapters\IConfigAdapter;
 
 class StatsigStore
 {
-    private array $gates;
-    private array $configs;
+    private ConfigSpecs $specs;
 
     function __construct(IConfigAdapter $config_adapter)
     {
-        $specs = $config_adapter->getConfigSpecs();
-        $this->gates = $specs["gates"] ?? [];
-        $this->configs = $specs["configs"] ?? [];
+        $this->specs = $config_adapter->getConfigSpecs() ?? new ConfigSpecs();
     }
 
     function getGateDefinition(string $gate)
     {
-        if (!array_key_exists($gate, $this->gates)) {
+        if (!array_key_exists($gate, $this->specs->gates)) {
             return null;
         }
-        return $this->gates[$gate];
+        return $this->specs->gates[$gate];
     }
 
     function getConfigDefinition(string $config)
     {
-        if (!array_key_exists($config, $this->configs)) {
+        if (!array_key_exists($config, $this->specs->configs)) {
             return null;
         }
-        return $this->configs[$config];
+        return $this->specs->configs[$config];
     }
 }

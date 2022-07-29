@@ -33,11 +33,11 @@ class E2ETest extends TestCase
         }
         $this->key = $key;
         $out = null;
-        exec("php sync.php --secret " . $key . " --output statsig.config 2>&1", $out);
+        exec("php sync.php --secret " . $key . " --adapter-arg ../../statsig.config 2>&1", $out);
 
         $net = new StatsigNetwork();
         $net->setSDKKey($key);
-        $this->cases = $net->post_request('rulesets_e2e_test', json_encode((object)[]));
+        $this->cases = $net->postRequest('rulesets_e2e_test', json_encode((object)[]));
     }
 
     protected function tearDown(): void
@@ -65,7 +65,7 @@ class E2ETest extends TestCase
         $this->helper();
         $out = null;
         // send.php will unlink the log file
-        exec("php send.php --secret " . $this->key . " --file statsig.log 2>&1", $out);
+        exec("php send.php --secret " . $this->key . " --adapter-arg ../../statsig.log 2>&1", $out);
     }
 
     private function helper()

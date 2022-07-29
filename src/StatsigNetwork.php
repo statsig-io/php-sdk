@@ -41,7 +41,7 @@ class StatsigNetwork
 
     function downloadConfigSpecs()
     {
-        return $this->post_request("download_config_specs", json_encode((object)[]));
+        return $this->postRequest("download_config_specs", json_encode((object)[]));
     }
 
     function checkGate(StatsigUser $user, string $gate)
@@ -52,7 +52,7 @@ class StatsigNetwork
             'statsigMetadata' => $this->statsig_metadata
         ];
 
-        return $this->post_request("check_gate", json_encode($req_body));
+        return $this->postRequest("check_gate", json_encode($req_body));
     }
 
     function getConfig(StatsigUser $user, string $config)
@@ -62,19 +62,19 @@ class StatsigNetwork
             'configName' => $config,
             'statsigMetadata' => $this->statsig_metadata
         ];
-        return $this->post_request("get_config", json_encode($req_body));
+        return $this->postRequest("get_config", json_encode($req_body));
     }
 
-    function log_events($events)
+    function logEvents($events)
     {
         $req_body = [
             'events' => $events,
             'statsigMetadata' => $this->statsig_metadata
         ];
-        return $this->post_request("rgstr", json_encode($req_body));
+        return $this->postRequest("rgstr", json_encode($req_body));
     }
 
-    function post_request($endpoint, $input)
+    function postRequest($endpoint, $input)
     {
         $curl = curl_init();
         curl_setopt_array($curl, array(

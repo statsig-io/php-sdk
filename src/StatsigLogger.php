@@ -78,9 +78,9 @@ class StatsigLogger
         $events = $this->events;
         $this->events = [];
         if ($this->logging_adapter !== null) {
-            $this->logging_adapter->logEvents($events);
+            $this->logging_adapter->enqueueEvents($events);
         }  else {
-            $this->network->log_events($events);
+            $this->network->logEvents($events);
         }
     }
 }

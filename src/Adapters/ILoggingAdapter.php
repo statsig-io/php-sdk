@@ -4,7 +4,8 @@ namespace Statsig\Adapters;
 
 interface ILoggingAdapter
 {
-    public function logEvents(array $events);
+    public function enqueueEvents(array $events);
+    public function getQueuedEvents(): array;
     public function open();
     public function close();
 }

@@ -2,10 +2,10 @@
 
 namespace Statsig\Adapters;
 
+use Statsig\ConfigSpecs;
+
 interface IConfigAdapter
 {
-    /**
-     * @return array<string, array>
-     */
-    function getConfigSpecs(): array;
+    function getConfigSpecs(): ConfigSpecs;
+    function updateConfigSpecs(ConfigSpecs $specs);
 }

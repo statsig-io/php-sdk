@@ -7,9 +7,9 @@ use Exception;
 class LocalFileLoggingAdapter implements ILoggingAdapter
 {
     private ?string $file_path;
-    private $file;
+    private /* ?resource */ $file;
 
-    function __construct(string $file_path)
+    function __construct(string $file_path = "/tmp/statsig.logs")
     {
         if (empty($file_path)) {
             $this->file_path = null;
@@ -48,7 +48,7 @@ class LocalFileLoggingAdapter implements ILoggingAdapter
         fclose($this->file);
     }
 
-    public function logEvents(array $events)
+    public function enqueueEvents(array $events)
     {
         if ($this->file === null) {
             return;
@@ -61,5 +61,37 @@ class LocalFileLoggingAdapter implements ILoggingAdapter
             @fwrite($this->file, $content);
         } catch (Exception $e) {
         }
+    }
+
+    public function getQueuedEvents(): array
+    {
+        // Rename the file
+        $dir = dirname($this->file_path);
+        $working_file = $dir . '/statsig-' . mt_rand() . '.log';
+
+        if (!file_exists($this->file_path)) {
+            print("file: $this->file_path does not exist");
+            exit(0);
+        }
+
+        if (!rename($this->file_path, $working_file)) {
+            print("error renaming from $this->file_path to $working_file\n");
+            exit(1);
+        }
+
+        $contents = file_get_contents($working_file);
+        $lines = explode("\n", $contents);
+
+
+        $events = [];
+        foreach ($lines as $line) {
+            if (!trim($line)) {
+                continue;
+            }
+            $events = array_merge($events, json_decode($line, true));
+        }
+
+        unlink($working_file);
+        return $events;
     }
 }
