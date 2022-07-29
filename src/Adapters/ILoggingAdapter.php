@@ -6,6 +6,5 @@ interface ILoggingAdapter
 {
     public function enqueueEvents(array $events);
     public function getQueuedEvents(): array;
-    public function open();
-    public function close();
+
 }

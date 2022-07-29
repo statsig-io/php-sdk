@@ -22,35 +22,14 @@ class LocalFileLoggingAdapter implements ILoggingAdapter
         $this->file_path = $file_path;
     }
 
-    public function open()
+    function __destruct()
     {
-        if ($this->file_path === null) {
-            return;
-        }
-
-        try {
-            $open = @fopen($this->file_path, 'ab');
-            if ($open !== false) {
-                $this->file = $open;
-                chmod($this->file_path, 0644);
-            }
-        } catch (Exception $e) {
-            $this->file = null;
-        }
-    }
-
-    public function close()
-    {
-        if ($this->file === null) {
-            return;
-        }
-
-        fclose($this->file);
+        $this->close();
     }
 
     public function enqueueEvents(array $events)
     {
-        if ($this->file === null) {
+        if ($this->file === null && !$this->open()) {
             return;
         }
 
@@ -82,7 +61,6 @@ class LocalFileLoggingAdapter implements ILoggingAdapter
         $contents = file_get_contents($working_file);
         $lines = explode("\n", $contents);
 
-
         $events = [];
         foreach ($lines as $line) {
             if (!trim($line)) {
@@ -93,5 +71,34 @@ class LocalFileLoggingAdapter implements ILoggingAdapter
 
         unlink($working_file);
         return $events;
+    }
+
+    private function open(): bool
+    {
+        if ($this->file_path === null) {
+            return false;
+        }
+
+        try {
+            $open = @fopen($this->file_path, 'ab');
+            if ($open !== false) {
+                $this->file = $open;
+                chmod($this->file_path, 0644);
+                return true;
+            }
+        } catch (Exception $e) {
+            $this->file = null;
+        }
+
+        return false;
+    }
+
+    private function close()
+    {
+        if ($this->file === null) {
+            return;
+        }
+
+        fclose($this->file);
     }
 }

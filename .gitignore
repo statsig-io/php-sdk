@@ -1,3 +1,5 @@
+statsig.log
+statsig.config
 .DS_Store
 /.idea/
 composer.phar

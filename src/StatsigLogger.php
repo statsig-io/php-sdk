@@ -14,20 +14,12 @@ class StatsigLogger
     function __construct(StatsigOptions  $options, StatsigNetwork $net)
     {
         $this->network = $net;
-
         $this->logging_adapter = $options->getLoggingAdapter();
-        if ($this->logging_adapter !== null) {
-            $this->logging_adapter->open();
-        }
     }
 
     public function __destruct()
     {
         $this->flush();
-
-        if ($this->logging_adapter !== null) {
-            $this->logging_adapter->close();
-        }
     }
 
     function log($event)
