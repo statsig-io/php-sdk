@@ -7,7 +7,11 @@
 // php send.php --secret <STATSIG_SECRET_KEY>
 //
 // You may also provide your own custom adapter that implements ILoggingAdapter
-// php send.php --secret <STATSIG_SECRET_KEY> --adapter Namespace\For\MyLoggingAdapter --adapter-arg an_argument_for_my_adapter --adapter-arg another_argument
+// php send.php --secret <STATSIG_SECRET_KEY> \
+//    --adapter-class Namespace\For\MyLoggingAdapter \
+//    --adapter-path /path/to/MyLoggingAdapter.php \
+//    --adapter-arg an_argument_for_my_adapter \
+//    --adapter-arg another_argument
 //
 // By default, send.php will use the Statsig LocalFileLoggingAdapter which writes to /tmp/statsig.logs
 //
@@ -21,23 +25,22 @@ use Statsig\Adapters\ILoggingAdapter;
 use Statsig\CronJobUtils;
 use Statsig\StatsigNetwork;
 
-$version = "0.3.1";
 
-$long_options = ["secret:", "adapter:", "adapter-arg:"];
-$options = getopt("", $long_options);
+$args = CronJobUtils::getCommandLineArgs();
 
-if (!isset($options['secret'])) {
+if (!isset($args['secret'])) {
     die('--secret must be given');
 }
 
 $adapter = CronJobUtils::getAdapter(
-    $options['adapter'] ?? "Statsig\Adapters\LocalFileLoggingAdapter",
-    $options['adapter-arg'],
+    $args['adapter-class'] ?? "Statsig\Adapters\LocalFileLoggingAdapter",
+    $args['adapter-path'] ?? "",
+    $args['adapter-arg'] ?? [],
     ILoggingAdapter::class
 );
 
-$network = new StatsigNetwork($version);
-$network->setSdkKey($options['secret']);
+$network = new StatsigNetwork();
+$network->setSdkKey($args['secret']);
 $events = $adapter->getQueuedEvents();
 
 $total = count($events);
@@ -49,4 +52,3 @@ while (!empty($events)) {
 
 print("sent $total events\n");
 exit(0);
-

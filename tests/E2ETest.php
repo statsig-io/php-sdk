@@ -45,7 +45,7 @@ class E2ETest extends TestCase
         unlink("statsig.config");
     }
 
-    public function testWithoutLogFile()
+    public function testWithoutLogAdapter()
     {
         $adapter = new LocalFileConfigAdapter("../../statsig.config");
         $options = new StatsigOptions($adapter);
@@ -55,7 +55,7 @@ class E2ETest extends TestCase
         $this->statsig->flush();
     }
 
-    public function testWithLogFile()
+    public function testWithLogAdapter()
     {
         $config_adapter = new LocalFileConfigAdapter("../../statsig.config");
         $logging_adapter = new LocalFileLoggingAdapter("../../statsig.log");

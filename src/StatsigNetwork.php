@@ -25,7 +25,7 @@ class StatsigNetwork
     private string $key;
     private array $statsig_metadata;
     private string $session_id;
-    function __construct($version = "0.3.1")
+    function __construct($version = CronJobUtils::VERSION)
     {
         $this->statsig_metadata = [
             'sdkType' => 'php-server',

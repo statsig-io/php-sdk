@@ -7,7 +7,11 @@
 // php sync.php --secret <STATSIG_SECRET_KEY>
 //
 // You may also provide your own custom adapter that implements IConfigAdapter
-// php send.php --secret <STATSIG_SECRET_KEY> --adapter Namespace\For\MyConfigAdapter --adapter-arg an_argument_for_my_adapter --adapter-arg another_argument
+// php send.php --secret <STATSIG_SECRET_KEY> \
+//     --adapter-class Namespace\For\MyConfigAdapter \
+//     --adapter-path /path/to/MyConfigAdapter.php \
+//     --adapter-arg an_argument_for_my_adapter \
+//     --adapter-arg another_argument
 //
 // By default, send.php will use the Statsig LocalFileConfigAdapter which writes to /tmp/statsig.configs
 // 
@@ -22,23 +26,22 @@ use Statsig\ConfigSpecs;
 use Statsig\CronJobUtils;
 use Statsig\StatsigNetwork;
 
-$version = "0.3.1";
 
-$long_options = ["secret:", "adapter:", "adapter-arg:"];
-$options = getopt("", $long_options);
+$args = CronJobUtils::getCommandLineArgs();
 
-if (!isset($options['secret'])) {
+if (!isset($args['secret'])) {
     die('--secret must be given');
 }
 
 $adapter = CronJobUtils::getAdapter(
-    $options['adapter'] ?? "Statsig\Adapters\LocalFileConfigAdapter",
-    $options['adapter-arg'],
+    $args['adapter-class'] ?? "Statsig\Adapters\LocalFileConfigAdapter",
+    $args['adapter-path'] ?? "",
+    $args['adapter-arg'] ?? [],
     IConfigAdapter::class
 );
 
-$network = new StatsigNetwork($version);
-$network->setSdkKey($options['secret']);
+$network = new StatsigNetwork();
+$network->setSdkKey($args['secret']);
 $specs = $network->downloadConfigSpecs();
 
 $parsed_gates = [];
@@ -55,5 +58,3 @@ $specs = new ConfigSpecs();
 $specs->gates = $parsed_gates;
 $specs->configs = $parsed_configs;
 $adapter->updateConfigSpecs($specs);
-
-
