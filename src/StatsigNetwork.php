@@ -2,8 +2,6 @@
 
 namespace Statsig;
 
-use Statsig\Adapters\AdapterUtils;
-
 /**
  * From https://www.uuidgenerator.net/dev-corner/php
  */
