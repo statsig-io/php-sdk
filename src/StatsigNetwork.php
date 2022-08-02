@@ -2,9 +2,11 @@
 
 namespace Statsig;
 
-// From https://www.uuidgenerator.net/dev-corner/php
-use Exception;
+use Statsig\Adapters\AdapterUtils;
 
+/**
+ * From https://www.uuidgenerator.net/dev-corner/php
+ */
 function guidv4($data = null)
 {
     // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
@@ -23,14 +25,9 @@ function guidv4($data = null)
 class StatsigNetwork
 {
     private string $key;
-    private array $statsig_metadata;
     private string $session_id;
-    function __construct($version = "0.3.1")
+    function __construct()
     {
-        $this->statsig_metadata = [
-            'sdkType' => 'php-server',
-            'sdkVersion' => $version
-        ];
         $this->session_id = guidv4();
     }
 
@@ -39,9 +36,26 @@ class StatsigNetwork
         $this->key = $key;
     }
 
-    function downloadConfigSpecs()
+    function downloadConfigSpecs(): ConfigSpecs
     {
-        return $this->post_request("download_config_specs", json_encode((object)[]));
+        $specs = $this->postRequest("download_config_specs", json_encode((object)[]));
+
+        $parsed_gates = [];
+        for ($i = 0; $i < count($specs["feature_gates"]); $i++) {
+            $parsed_gates[$specs["feature_gates"][$i]["name"]] = $specs["feature_gates"][$i];
+        }
+
+        $parsed_configs = [];
+        for ($i = 0; $i < count($specs["dynamic_configs"]); $i++) {
+            $parsed_configs[$specs["dynamic_configs"][$i]["name"]] = $specs["dynamic_configs"][$i];
+        }
+
+        $result = new ConfigSpecs();
+        $result->gates = $parsed_gates;
+        $result->configs = $parsed_configs;
+        $result->fetchTime = floor(microtime(true) * 1000);
+
+        return $result;
     }
 
     function checkGate(StatsigUser $user, string $gate)
@@ -49,10 +63,10 @@ class StatsigNetwork
         $req_body = [
             'user' => $user->toLogDictionary(),
             'gateName' => $gate,
-            'statsigMetadata' => $this->statsig_metadata
+            'statsigMetadata' => StatsigMetadata::getJson()
         ];
 
-        return $this->post_request("check_gate", json_encode($req_body));
+        return $this->postRequest("check_gate", json_encode($req_body));
     }
 
     function getConfig(StatsigUser $user, string $config)
@@ -60,21 +74,21 @@ class StatsigNetwork
         $req_body = [
             'user' => $user->toLogDictionary(),
             'configName' => $config,
-            'statsigMetadata' => $this->statsig_metadata
+            'statsigMetadata' => StatsigMetadata::getJson()
         ];
-        return $this->post_request("get_config", json_encode($req_body));
+        return $this->postRequest("get_config", json_encode($req_body));
     }
 
-    function log_events($events)
+    function logEvents($events)
     {
         $req_body = [
             'events' => $events,
-            'statsigMetadata' => $this->statsig_metadata
+            'statsigMetadata' => StatsigMetadata::getJson()
         ];
-        return $this->post_request("rgstr", json_encode($req_body));
+        return $this->postRequest("rgstr", json_encode($req_body));
     }
 
-    function post_request($endpoint, $input)
+    function postRequest($endpoint, $input)
     {
         $curl = curl_init();
         curl_setopt_array($curl, array(
@@ -90,8 +104,8 @@ class StatsigNetwork
             CURLOPT_HTTPHEADER => array(
                 "STATSIG-API-KEY: {$this->key}",
                 "STATSIG-SERVER-SESSION-ID: {$this->session_id}",
-                "STATSIG-SDK-TYPE: {$this->statsig_metadata['sdkType']}",
-                "STATSIG-SDK-VERSION: {$this->statsig_metadata['sdkVersion']}",
+                "STATSIG-SDK-TYPE: " . StatsigMetadata::SDK_TYPE,
+                "STATSIG-SDK-VERSION: ". StatsigMetadata::VERSION,
                 'Content-Type: application/json'
             ),
         ));

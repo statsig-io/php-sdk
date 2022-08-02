@@ -18,7 +18,8 @@
         "ua-parser/uap-php": "^3.9",
         "statsig/ip3country": "^0.1.0",
         "ext-json": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "mockery/mockery": "^1.5"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.3"

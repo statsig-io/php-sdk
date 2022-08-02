@@ -4,83 +4,50 @@
 // The SDK will write events to a file which will be uploaded by send.php
 
 // USAGE:
-// php send.php --secret <STATSIG_SECRET_KEY> --file /tmp/statsig.log
-// 
+// php send.php --secret <STATSIG_SECRET_KEY>
+//
+// You may also provide your own custom adapter that implements ILoggingAdapter
+// php send.php --secret <STATSIG_SECRET_KEY> \
+//    --adapter-class Namespace\For\MyLoggingAdapter \
+//    --adapter-path /path/to/MyLoggingAdapter.php \
+//    --adapter-arg an_argument_for_my_adapter \
+//    --adapter-arg another_argument
+//
+// By default, send.php will use the Statsig LocalFileLoggingAdapter which writes to /tmp/statsig.logs
+//
 // Create a cron job that runs as statsigdata every minute
 // $ echo '*/1 * * * * statsigdata php /my/path/to/statsig/send.php > /dev/null' | sudo tee /etc/cron.d/statsigdata
 // $ sudo service cron reload    # reload the cron daemon
 
 require './vendor/autoload.php';
 
+use Statsig\Adapters\AdapterUtils;
+use Statsig\Adapters\ILoggingAdapter;
 use Statsig\StatsigNetwork;
 
-$version = "0.3.1";
+$args = AdapterUtils::getCommandLineArgs();
 
-$args = parse($argv);
 if (!isset($args['secret'])) {
     die('--secret must be given');
 }
-if (!isset($args['file'])) {
-    die('--file must be given');
-}
 
-$file = $args['file'];
-if ($file[0] !== '/') {
-    $file = __DIR__ . '/' . $file;
-}
+$adapter = AdapterUtils::getAdapter(
+    $args['adapter-class'] ?? "Statsig\Adapters\LocalFileLoggingAdapter",
+    $args['adapter-path'] ?? "",
+    $args['adapter-arg'] ?? [],
+    ILoggingAdapter::class
+);
 
-// Rename the file
-$dir = dirname($file);
-$old = $file;
-$file = $dir . '/statsig-' . mt_rand() . '.log';
-
-if (!file_exists($old)) {
-    print("file: $old does not exist");
-    exit(0);
-}
-
-if (!rename($old, $file)) {
-    print("error renaming from $old to $file\n");
-    exit(1);
-}
-
-$contents = file_get_contents($file);
-$lines = explode("\n", $contents);
-
-$network = new StatsigNetwork($version);
+$network = new StatsigNetwork();
 $network->setSdkKey($args['secret']);
+$events = $adapter->getQueuedEvents();
 
-$total = 0;
-$events = [];
-foreach ($lines as $line) {
-    if (!trim($line)) {
-        continue;
-    }
-    $events = array_merge($events, json_decode($line, true));
-    if (count($events) > 500) {
-        $to_send = array_slice($events, 0, 500);
-        $events = array_slice($events, 500);
-        $total += count($to_send);
-        $network->log_events($to_send);
-    }
+$total = count($events);
+while (!empty($events)) {
+    $to_send = array_slice($events, 0, 500);
+    $events = array_slice($events, 500);
+    $network->logEvents($to_send);
 }
-$total += count($events);
-$network->log_events($events);
-
-unlink($file);
 
 print("sent $total events\n");
 exit(0);
-
-function parse($argv): array {
-    $ret = [];
-
-    foreach ($argv as $param => $value) {
-        if (strpos($value, '--') !== 0) {
-            continue;
-        }
-        $ret[substr($value, 2, strlen($value))] = trim($argv[++$param]);
-    }
-
-    return $ret;
-}

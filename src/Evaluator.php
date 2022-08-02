@@ -14,9 +14,9 @@ class Evaluator
     private Parser $ua_parser;
     private IP3Country $ip3c;
 
-    function __construct(StatsigOptions $options)
+    function __construct(StatsigStore $store)
     {
-        $this->store = new StatsigStore($options->getConfigFilePath());
+        $this->store = $store;
         $this->ua_parser = Parser::create();
         $this->ip3c = new IP3Country();
     }

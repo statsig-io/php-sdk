@@ -4,9 +4,12 @@ namespace Statsig\Test;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
+use Statsig\Adapters\LocalFileConfigAdapter;
+use Statsig\Adapters\LocalFileLoggingAdapter;
 use Statsig\Evaluator;
 use Statsig\StatsigServer;
 use Statsig\StatsigNetwork;
+use Statsig\StatsigStore;
 use Statsig\StatsigUser;
 use Statsig\StatsigOptions;
 use Statsig\StatsigEvent;
@@ -31,11 +34,11 @@ class E2ETest extends TestCase
         }
         $this->key = $key;
         $out = null;
-        exec("php sync.php --secret " . $key . " --output statsig.config 2>&1", $out);
+        exec("php sync.php --secret " . $key . " --adapter-arg ../../statsig.config 2>&1", $out);
 
         $net = new StatsigNetwork();
         $net->setSDKKey($key);
-        $this->cases = $net->post_request('rulesets_e2e_test', json_encode((object)[]));
+        $this->cases = $net->postRequest('rulesets_e2e_test', json_encode((object)[]));
     }
 
     protected function tearDown(): void
@@ -43,24 +46,30 @@ class E2ETest extends TestCase
         unlink("statsig.config");
     }
 
-    public function testWithoutLogFile()
+    public function testWithoutLogAdapter()
     {
-        $options = new StatsigOptions("../statsig.config");
-        $this->evaluator = new Evaluator($options);
-        $this->statsig = new StatsigServer($this->key, $options);
+        $this->setupStatsig(false);
         $this->helper();
         $this->statsig->flush();
     }
 
-    public function testWithLogFile()
+    public function testWithLogAdapter()
     {
-        $options = new StatsigOptions("../statsig.config", "../statsig.log");
-        $this->evaluator = new Evaluator($options);
-        $this->statsig = new StatsigServer($this->key, $options);
+        $this->setupStatsig(true);
         $this->helper();
         $out = null;
         // send.php will unlink the log file
-        exec("php send.php --secret " . $this->key . " --file statsig.log 2>&1", $out);
+        exec("php send.php --secret " . $this->key . " --adapter-arg ../../statsig.log 2>&1", $out);
+    }
+
+    private function setupStatsig(bool $include_logging_adapter)
+    {
+        $config_adapter = new LocalFileConfigAdapter("../../statsig.config");
+        $logging_adapter = $include_logging_adapter ? new LocalFileLoggingAdapter("../../statsig.log") : null;
+        $options = new StatsigOptions($config_adapter, $logging_adapter);
+        $store = new StatsigStore(new StatsigNetwork(), $config_adapter);
+        $this->evaluator = new Evaluator($store);
+        $this->statsig = new StatsigServer($this->key, $options);
     }
 
     private function helper()

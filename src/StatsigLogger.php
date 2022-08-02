@@ -3,41 +3,23 @@
 namespace Statsig;
 
 use Exception;
+use Statsig\Adapters\ILoggingAdapter;
 
 class StatsigLogger
 {
     private array $events = [];
     private StatsigNetwork $network;
-    private $logging_output_file;
+    private ?ILoggingAdapter $logging_adapter;
 
     function __construct(StatsigOptions  $options, StatsigNetwork $net)
     {
         $this->network = $net;
-
-        if ($options->getLoggingFilePath() == null) {
-            $this->logging_output_file = null;
-            return;
-        }
-
-        try {
-            $file_name = $options->getLoggingFilePath();
-            $open = @fopen($file_name, 'ab');
-            if ($open !== false) {
-                $this->logging_output_file = $open;
-                chmod($file_name, 0644);
-            }
-        } catch (Exception $e) {
-            $this->logging_output_file = null;
-        }
+        $this->logging_adapter = $options->getLoggingAdapter();
     }
 
     public function __destruct()
     {
-        if ($this->logging_output_file === null) {
-            return;
-        }
         $this->flush();
-        fclose($this->logging_output_file);
     }
 
     function log($event)
@@ -87,16 +69,10 @@ class StatsigLogger
         }
         $events = $this->events;
         $this->events = [];
-        if ($this->logging_output_file !== null) {
-            try {
-                $content = json_encode($events);
-                $content .= "\n";
-
-                @fwrite($this->logging_output_file, $content);
-            } catch (Exception $e) {
-            }
-        } else {
-            $this->network->log_events($events);
+        if ($this->logging_adapter !== null) {
+            $this->logging_adapter->enqueueEvents($events);
+        }  else {
+            $this->network->logEvents($events);
         }
     }
 }
