@@ -8,6 +8,7 @@ use Statsig\Adapters\ILoggingAdapter;
 class StatsigLogger
 {
     private array $events = [];
+    private int $event_queue_size;
     private StatsigNetwork $network;
     private ?ILoggingAdapter $logging_adapter;
 
@@ -15,6 +16,7 @@ class StatsigLogger
     {
         $this->network = $net;
         $this->logging_adapter = $options->getLoggingAdapter();
+        $this->event_queue_size = $options->getEventQueueSize();
     }
 
     public function __destruct()
@@ -57,7 +59,7 @@ class StatsigLogger
     function enqueue($json)
     {
         $this->events[] = $json;
-        if (count($this->events) >= 500) {
+        if (count($this->events) >= $this->event_queue_size) {
             $this->flush();
         }
     }
