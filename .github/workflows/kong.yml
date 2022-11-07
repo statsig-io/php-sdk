@@ -25,7 +25,7 @@ jobs:
       - name: Setup PHP Server
         run: |
           cd kong/bridges/php-server
-          composer config --auth github-oauth.github.com ${{ secrets.PHP_REPO_PAT }}
+          composer config --auth github-oauth.github.com ${{ secrets.KONG_REPO_PAT }}
           BRANCH="${GITHUB_HEAD_REF:-main}"; composer config repositories.0 "{\"type\": \"vcs\", \"url\": \"git@github.com:$GITHUB_REPOSITORY.git\", \"trunk-path\": \"$BRANCH\"}"
           cat composer.json
           composer update
