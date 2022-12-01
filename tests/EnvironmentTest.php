@@ -3,8 +3,9 @@
 namespace Statsig\Test;
 
 use PHPUnit\Framework\TestCase;
-use Statsig\Adapters\LocalFileConfigAdapter;
+use Statsig\Adapters\LocalFileDataAdapter;
 use Statsig\Adapters\LocalFileLoggingAdapter;
+use Statsig\ConfigSpecs;
 use Statsig\StatsigServer;
 use Statsig\StatsigOptions;
 use Statsig\StatsigUser;
@@ -13,15 +14,14 @@ use Statsig\StatsigEvent;
 class EnvironmentTest extends TestCase
 {
     private StatsigServer $statsig;
-    private StatsigUser  $statsig_user;
+    private StatsigUser $statsig_user;
 
     protected function setUp(): void
     {
-        $actual_adapter = new LocalFileConfigAdapter("../../tests/testdata.config");
-        $specs = $actual_adapter->getConfigSpecs();
-        $specs->fetchTime = floor(microtime(true) * 1000);
-        $mock_config_adapter = \Mockery::mock('Statsig\Adapters\LocalFileConfigAdapter');
-        $mock_config_adapter->shouldReceive("getConfigSpecs")->andReturn($specs);
+        $contents = json_decode(file_get_contents(__DIR__ . "/statsig.cache"), true);
+        $contents["fetch_time"] = floor(microtime(true) * 1000);
+        $mock_config_adapter = \Mockery::mock('Statsig\Adapters\LocalFileDataAdapter');
+        $mock_config_adapter->shouldReceive("get")->andReturn(json_encode($contents));
 
         $logging_adapter = new LocalFileLoggingAdapter("../../tests/testdata.log");
         $options = new StatsigOptions($mock_config_adapter, $logging_adapter);
@@ -93,7 +93,8 @@ class EnvironmentTest extends TestCase
         $key,
         $value,
         $ruleID
-    ) {
+    )
+    {
         $this->assertEquals($name, $event["eventName"]);
         $this->assertEquals($value, $event["metadata"][$key]);
         $this->assertEquals($ruleID, $event["metadata"]["ruleID"]);

@@ -2,22 +2,21 @@
 
 namespace Statsig;
 
-use Statsig\Adapters\AdapterUtils;
-use Statsig\Adapters\IConfigAdapter;
+use Statsig\Adapters\IDataAdapter;
 
 class StatsigStore
 {
     private StatsigNetwork $network;
-    private IConfigAdapter $config_adapter;
+    private StatsigOptions $options;
+    private IDataAdapter $data_adapter;
     private ?ConfigSpecs $specs;
 
-    private const ONE_MINUTE_IN_MS = 1000 * 60;
-
-    function __construct(StatsigNetwork $network, IConfigAdapter $config_adapter)
+    function __construct(StatsigNetwork $network, StatsigOptions $options)
     {
         $this->network = $network;
-        $this->config_adapter = $config_adapter;
-        $this->specs = $config_adapter->getConfigSpecs();
+        $this->options = $options;
+        $this->data_adapter = $options->getDataAdapter();
+        $this->specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
     }
 
     function getGateDefinition(string $gate)
@@ -40,21 +39,24 @@ class StatsigStore
         return $this->specs->configs[$config];
     }
 
+    function getIDList(string $id_list_name): ?IDList
+    {
+        return IDList::getIDListFromAdapter($this->data_adapter, $id_list_name);
+    }
+
     function ensureSpecFreshness()
     {
         $current_time = floor(microtime(true) * 1000);
-        if ($this->specs != null && ($current_time - $this->specs->fetchTime) <= self::ONE_MINUTE_IN_MS) {
+        if ($this->specs != null && ($current_time - $this->specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
             return;
         }
 
-        $adapter_specs = $this->config_adapter->getConfigSpecs();
-        if ($adapter_specs != null && ($current_time - $adapter_specs->fetchTime) <= self::ONE_MINUTE_IN_MS) {
+        $adapter_specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
+        if ($adapter_specs != null && ($current_time - $adapter_specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
             $this->specs = $adapter_specs;
             return;
         }
 
-        $network_specs = $this->network->downloadConfigSpecs();
-        $this->config_adapter->updateConfigSpecs($network_specs);
-        $this->specs = $network_specs;
+        $this->specs = ConfigSpecs::sync($this->data_adapter, $this->network);
     }
 }

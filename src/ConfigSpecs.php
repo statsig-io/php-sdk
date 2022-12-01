@@ -2,9 +2,62 @@
 
 namespace Statsig;
 
+use Statsig\Adapters\IDataAdapter;
+
 class ConfigSpecs
 {
-    public int $fetchTime;
+    private const RULESETS_KEY = "statsig.cache";
+
+    public int $fetch_time;
     public array $gates = [];
     public array $configs = [];
+
+    public static function sync(IDataAdapter $adapter, StatsigNetwork $network): ?ConfigSpecs
+    {
+        $json = $network->postRequest("download_config_specs", json_encode((object)[]));
+        $specs = ConfigSpecs::fromJson($json);
+
+        if ($specs !== null) {
+            $adapter->set(self::RULESETS_KEY, json_encode([
+                "fetch_time" => $specs->fetch_time,
+                "gates" => $specs->gates,
+                "configs" => $specs->configs
+            ]));
+        }
+
+        return $specs;
+    }
+
+    public static function loadFromDataAdapter(IDataAdapter $adapter): ?ConfigSpecs
+    {
+        $json = @json_decode($adapter->get(self::RULESETS_KEY), true);
+        if ($json === null) {
+            return null;
+        }
+
+        $result = new ConfigSpecs();
+        $result->gates = $json["gates"] ?? [];
+        $result->configs = $json["configs"] ?? [];
+        $result->fetch_time = $json["fetch_time"] ?? 0;
+        return $result;
+    }
+
+    private static function fromJson(array $json): ?ConfigSpecs
+    {
+        $parsed_gates = [];
+        for ($i = 0; $i < count($json["feature_gates"]); $i++) {
+            $parsed_gates[$json["feature_gates"][$i]["name"]] = $json["feature_gates"][$i];
+        }
+
+        $parsed_configs = [];
+        for ($i = 0; $i < count($json["dynamic_configs"]); $i++) {
+            $parsed_configs[$json["dynamic_configs"][$i]["name"]] = $json["dynamic_configs"][$i];
+        }
+
+        $result = new ConfigSpecs();
+        $result->gates = $parsed_gates;
+        $result->configs = $parsed_configs;
+        $result->fetch_time = floor(microtime(true) * 1000);
+        return $result;
+    }
 }

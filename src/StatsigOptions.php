@@ -2,7 +2,7 @@
 
 namespace Statsig;
 
-use Statsig\Adapters\IConfigAdapter;
+use Statsig\Adapters\IDataAdapter;
 use Statsig\Adapters\ILoggingAdapter;
 use Exception;
 
@@ -10,19 +10,25 @@ class StatsigOptions
 {
     public ?string $tier = null;
 
+    /**
+     * @var int How old (in milliseconds) are config definitions allowed to be before a network request to refresh them is made.
+     * default: 1 minute
+     */
+    public int $config_freshness_threshold_ms = 1000 * 60;
+
     private int $event_queue_size = 500;
-    private IConfigAdapter $config_adapter;
+    private IDataAdapter $data_adapter;
     private ?ILoggingAdapter $logging_adapter;
 
-    function __construct(IConfigAdapter $config_adapter, ?ILoggingAdapter $logging_adapter = null)
+    function __construct(IDataAdapter $data_adapter, ?ILoggingAdapter $logging_adapter = null)
     {
-        $this->config_adapter = $config_adapter;
+        $this->data_adapter = $data_adapter;
         $this->logging_adapter = $logging_adapter;
     }
 
-    function getConfigAdapter(): IConfigAdapter
+    function getDataAdapter(): IDataAdapter
     {
-        return $this->config_adapter;
+        return $this->data_adapter;
     }
 
     function getLoggingAdapter(): ?ILoggingAdapter
@@ -50,4 +56,6 @@ class StatsigOptions
     {
         return $this->event_queue_size;
     }
+
+
 }

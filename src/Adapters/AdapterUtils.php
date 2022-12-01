@@ -4,8 +4,6 @@ namespace Statsig\Adapters;
 
 use ReflectionClass;
 use ReflectionException;
-use Statsig\ConfigSpecs;
-use Statsig\StatsigNetwork;
 
 abstract class AdapterUtils
 {

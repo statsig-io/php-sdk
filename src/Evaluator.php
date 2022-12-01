@@ -309,8 +309,13 @@ class Evaluator
                 return new ConfigEvaluation($a == $b);
             case 'in_segment_list':
             case 'not_in_segment_list':
-                // TODO id lists
-                return new ConfigEvaluation(false, "", [], [], true);
+                $is_in_list = false;
+                $list = $this->store->getIDList($target);
+                if ($list instanceof IDList) {
+                    $hash =  substr(base64_encode(hash("sha256", $value, true)), 0, 8);
+                    $is_in_list = array_key_exists($hash, $list->ids);
+                }
+                return new ConfigEvaluation($operator == "in_segment_list" ? $is_in_list : !$is_in_list);
             default:
                 return new ConfigEvaluation(false, "", [], [], true);
         }

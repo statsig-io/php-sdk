@@ -4,7 +4,7 @@ namespace Statsig\Test;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
-use Statsig\Adapters\LocalFileConfigAdapter;
+use Statsig\Adapters\LocalFileDataAdapter;
 use Statsig\Adapters\LocalFileLoggingAdapter;
 use Statsig\Evaluator;
 use Statsig\StatsigServer;
@@ -34,7 +34,7 @@ class E2ETest extends TestCase
         }
         $this->key = $key;
         $out = null;
-        exec("php sync.php --secret " . $key . " --adapter-arg ../../statsig.config 2>&1", $out);
+        exec("php sync.php --secret " . $key . " 2>&1", $out);
 
         $net = new StatsigNetwork();
         $net->setSDKKey($key);
@@ -43,7 +43,7 @@ class E2ETest extends TestCase
 
     protected function tearDown(): void
     {
-        unlink("statsig.config");
+        @unlink("statsig.config");
     }
 
     public function testWithoutLogAdapter()
@@ -64,12 +64,16 @@ class E2ETest extends TestCase
 
     private function setupStatsig(bool $include_logging_adapter)
     {
-        $config_adapter = new LocalFileConfigAdapter("../../statsig.config");
+        $config_adapter = new LocalFileDataAdapter();
         $logging_adapter = $include_logging_adapter ? new LocalFileLoggingAdapter("../../statsig.log") : null;
         $options = new StatsigOptions($config_adapter, $logging_adapter);
-        $store = new StatsigStore(new StatsigNetwork(), $config_adapter);
+        $store = new StatsigStore(new StatsigNetwork(), $options);
         $this->evaluator = new Evaluator($store);
         $this->statsig = new StatsigServer($this->key, $options);
+
+        TestUtils::mockNetworkOnStatsigInstance($this->statsig, function ($method, $endpoint, $input) {
+            return $endpoint == "rgstr" ? [] : null;
+        });
     }
 
     private function helper()
@@ -108,11 +112,9 @@ class E2ETest extends TestCase
                     $this->statsig->checkGate($statsig_user, $name);
                     $eval_result = $this->evaluator->checkGate($statsig_user, $name);
                     $server_result = $gate["value"];
-                    if ($name !== 'test_id_list' && $name !== 'test_not_in_id_list') {
-                        $this->assertEquals($server_result, $eval_result->bool_value, "Failed value comparison for gate: " . $name);
-                        $this->assertEquals($gate["rule_id"], $eval_result->rule_id);
-                        $this->assertEquals($gate["secondary_exposures"], $eval_result->secondary_exposures);
-                    }
+                    $this->assertEquals($server_result, $eval_result->bool_value, "Failed value comparison for gate: " . $name);
+                    $this->assertEquals($gate["rule_id"], $eval_result->rule_id);
+                    $this->assertEquals($gate["secondary_exposures"], $eval_result->secondary_exposures);
                 }
 
                 $configs = $val["dynamic_configs"];

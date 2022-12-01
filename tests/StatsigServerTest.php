@@ -3,7 +3,7 @@
 namespace Statsig\Test;
 
 use PHPUnit\Framework\TestCase;
-use Statsig\Adapters\LocalFileConfigAdapter;
+use Statsig\Adapters\LocalFileDataAdapter;
 use Statsig\Adapters\LocalFileLoggingAdapter;
 use Statsig\StatsigServer;
 use Statsig\StatsigOptions;
@@ -17,11 +17,11 @@ class StatsigServerTest extends TestCase
 
     protected function setup(): void
     {
-        $actual_adapter = new LocalFileConfigAdapter("../../tests/testdata.config");
-        $specs = $actual_adapter->getConfigSpecs();
-        $specs->fetchTime = floor(microtime(true) * 1000);
-        $mock_config_adapter = \Mockery::mock('Statsig\Adapters\LocalFileConfigAdapter');
-        $mock_config_adapter->shouldReceive("getConfigSpecs")->andReturn($specs);
+        $contents = json_decode(file_get_contents(__DIR__ . "/statsig.cache"), true);
+        $contents["fetch_time"] = floor(microtime(true) * 1000);
+        $mock_config_adapter = \Mockery::mock('Statsig\Adapters\LocalFileDataAdapter');
+        $mock_config_adapter->shouldReceive("get")->andReturn(json_encode($contents));
+
         $logging_adapter = new LocalFileLoggingAdapter("../../tests/testdata.log");
 
         $this->statsig = new StatsigServer("secret-test", new StatsigOptions($mock_config_adapter, $logging_adapter));

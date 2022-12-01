@@ -2,6 +2,7 @@
 
 namespace Statsig;
 
+
 /**
  * From https://www.uuidgenerator.net/dev-corner/php
  */
@@ -24,6 +25,7 @@ class StatsigNetwork
 {
     private string $key;
     private string $session_id;
+
     function __construct()
     {
         $this->session_id = guidv4();
@@ -32,28 +34,6 @@ class StatsigNetwork
     function setSdkKey($key)
     {
         $this->key = $key;
-    }
-
-    function downloadConfigSpecs(): ConfigSpecs
-    {
-        $specs = $this->postRequest("download_config_specs", json_encode((object)[]));
-
-        $parsed_gates = [];
-        for ($i = 0; $i < count($specs["feature_gates"]); $i++) {
-            $parsed_gates[$specs["feature_gates"][$i]["name"]] = $specs["feature_gates"][$i];
-        }
-
-        $parsed_configs = [];
-        for ($i = 0; $i < count($specs["dynamic_configs"]); $i++) {
-            $parsed_configs[$specs["dynamic_configs"][$i]["name"]] = $specs["dynamic_configs"][$i];
-        }
-
-        $result = new ConfigSpecs();
-        $result->gates = $parsed_gates;
-        $result->configs = $parsed_configs;
-        $result->fetchTime = floor(microtime(true) * 1000);
-
-        return $result;
     }
 
     function checkGate(StatsigUser $user, string $gate)
@@ -103,12 +83,61 @@ class StatsigNetwork
                 "STATSIG-API-KEY: {$this->key}",
                 "STATSIG-SERVER-SESSION-ID: {$this->session_id}",
                 "STATSIG-SDK-TYPE: " . StatsigMetadata::SDK_TYPE,
-                "STATSIG-SDK-VERSION: ". StatsigMetadata::VERSION,
+                "STATSIG-SDK-VERSION: " . StatsigMetadata::VERSION,
                 'Content-Type: application/json'
             ),
         ));
         $response = curl_exec($curl);
         curl_close($curl);
         return json_decode($response, true);
+    }
+
+    function multiGetRequest($requests): array
+    {
+        $multi = curl_multi_init();
+        $responses = [];
+
+        foreach ($requests as $key => $value) {
+            $curl = curl_init();
+            $responses[$key] = [
+                "headers" => [],
+                "curl" => $curl
+            ];
+            $headers = &$responses[$key]["headers"];
+
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $value["url"],
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_HTTPHEADER => $value["headers"],
+                CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$headers) {
+                    $len = strlen($header);
+                    $header = explode(':', $header, 2);
+                    if (count($header) >= 2) {
+                        $headers[strtolower(trim($header[0]))][] = trim($header[1]);
+                    }
+                    return $len;
+                }
+            ]);
+            curl_multi_add_handle($multi, $curl);
+        }
+
+        $index = null;
+        do {
+            curl_multi_exec($multi, $index);
+        } while ($index > 0);
+
+        foreach ($responses as $key => $value) {
+            $content = curl_multi_getcontent($value["curl"]);
+            $responses[$key] = [
+                "headers" => $value["headers"],
+                "data" => $content
+            ];
+            curl_multi_remove_handle($multi, $curl);
+        }
+
+        return $responses;
     }
 }

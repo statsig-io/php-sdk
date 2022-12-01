@@ -172,7 +172,6 @@ abstract class EvaluationUtils
     {
         $hash = hash("sha256", $val, True);
         $hex = bin2hex(substr($hash, 0, 8));
-
         return self::baseConvertToString($hex, 16, 10);
     }
 
