@@ -44,6 +44,10 @@ class ConfigSpecs
 
     private static function fromJson(array $json): ?ConfigSpecs
     {
+        if ($json == null) {
+            return null;
+        }
+
         $parsed_gates = [];
         for ($i = 0; $i < count($json["feature_gates"]); $i++) {
             $parsed_gates[$json["feature_gates"][$i]["name"]] = $json["feature_gates"][$i];
