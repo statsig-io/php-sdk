@@ -42,7 +42,7 @@ class ConfigSpecs
         return $result;
     }
 
-    private static function fromJson(array $json): ?ConfigSpecs
+    private static function fromJson(?array $json): ?ConfigSpecs
     {
         if ($json == null) {
             return null;
