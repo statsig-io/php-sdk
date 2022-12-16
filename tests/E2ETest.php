@@ -101,6 +101,9 @@ class E2ETest extends TestCase
                 if (array_key_exists("customIDs", $user)) {
                     $statsig_user = $statsig_user->setCustomIDs($user["customIDs"]);
                 }
+                if (array_key_exists("locale", $user)) {
+                    $statsig_user = $statsig_user->setLocale($user["locale"]);
+                }
                 $event = new StatsigEvent("newevent");
                 $event->setUser($statsig_user);
                 $event->setValue(1337);
