@@ -11,7 +11,8 @@ abstract class StatsigMetadata
     {
         return [
             'sdkType' => self::SDK_TYPE,
-            'sdkVersion' => self::VERSION
+            'sdkVersion' => self::VERSION,
+            'languageVersion' => phpversion()
         ];
     }
 }
