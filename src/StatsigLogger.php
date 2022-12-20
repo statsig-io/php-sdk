@@ -2,7 +2,6 @@
 
 namespace Statsig;
 
-use Exception;
 use Statsig\Adapters\ILoggingAdapter;
 
 class StatsigLogger
@@ -73,7 +72,7 @@ class StatsigLogger
         $this->events = [];
         if ($this->logging_adapter !== null) {
             $this->logging_adapter->enqueueEvents($events);
-        }  else {
+        } else {
             $this->network->logEvents($events);
         }
     }

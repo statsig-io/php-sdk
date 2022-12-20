@@ -32,6 +32,11 @@ class StatsigUser
         return $this;
     }
 
+    function getUserID(): ?string 
+    {
+        return $this->user_id;
+    }
+
     function setEmail(?string $email): StatsigUser
     {
         $this->email = $email;
@@ -86,6 +91,11 @@ class StatsigUser
         return $this;
     }
 
+    function getCustomIDs(): ?array
+    {
+        return $this->custom_ids;
+    }
+
     function setStatsigEnvironment(?array $environment): StatsigUser
     {
         $this->statsig_environment = $environment;
@@ -122,7 +132,7 @@ class StatsigUser
         $is_user_empty = $this->user_id === null || trim($this->user_id) === '';
         $is_customer_ids_empty = $this->custom_ids === null || count($this->custom_ids) === 0;
         if ($is_user_empty && $is_customer_ids_empty) {
-            throw new Exception("User must have a userID or customID for the server SDK to work. See https://docs.statsig.com/messages/serverRequiredUserID/ for more details.");
+            throw new StatsigUserException("User must have a userID or customID for the server SDK to work. See https://docs.statsig.com/messages/serverRequiredUserID/ for more details.");
         }
     }
 
