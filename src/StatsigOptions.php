@@ -4,6 +4,7 @@ namespace Statsig;
 
 use Statsig\Adapters\IDataAdapter;
 use Statsig\Adapters\ILoggingAdapter;
+use Statsig\Exceptions\EventQueueSizeException;
 use Exception;
 
 class StatsigOptions

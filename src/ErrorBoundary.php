@@ -2,17 +2,21 @@
 
 namespace Statsig;
 
+use Statsig\Exceptions\EventQueueSizeException;
+use Statsig\Exceptions\InvalidSDKKeyException;
+use Statsig\Exceptions\StatsigUserException;
 use Exception;
 
 class ErrorBoundary
 {
     const ENDPOINT = 'https://statsigapi.net/v1/sdk_exception';
-    private array $seen;
     private string $api_key;
+    private array $seen;
 
     function __construct($api_key)
     {
         $this->api_key = $api_key;
+        $this->seen = [];
     }
 
     function capture(callable $task, callable $recover, ...$args)

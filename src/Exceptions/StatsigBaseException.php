@@ -1,6 +1,6 @@
 <?php
 
-namespace Statsig;
+namespace Statsig\Exceptions;
 
 use Exception;
 use Throwable;

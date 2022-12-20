@@ -1,6 +1,6 @@
 <?php
 
-namespace Statsig;
+namespace Statsig\Exceptions;
 
 class InvalidSDKKeyException extends StatsigBaseException
 {

@@ -2,6 +2,8 @@
 
 namespace Statsig;
 
+use Statsig\Exceptions\InvalidSDKKeyException;
+
 class StatsigServer
 {
     private StatsigNetwork $network;
@@ -13,7 +15,7 @@ class StatsigServer
 
     function __construct(string $sdk_key, StatsigOptions $options)
     {
-        if (!substr($sdk_key, 0, 7) === 'secret-') {
+        if (substr($sdk_key, 0, 7) !== 'secret-') {
             throw new InvalidSDKKeyException('Invalid key provided.  You must use a Server Secret Key from the Statsig console.');
         }
         $this->error_boundary = new ErrorBoundary($sdk_key);
