@@ -14,6 +14,12 @@ class StatsigBaseException extends Exception
 
     public function __toString()
     {
-        return "Statsig:" . __CLASS__;
+        return get_class($this);
+    }
+
+    public function logToStderr()
+    {
+        $message = sprintf('[%s] %s' . PHP_EOL, $this->__toString(), $this->getMessage());
+        error_log($message);
     }
 }

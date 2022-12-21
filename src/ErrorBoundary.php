@@ -2,9 +2,7 @@
 
 namespace Statsig;
 
-use Statsig\Exceptions\EventQueueSizeException;
-use Statsig\Exceptions\InvalidSDKKeyException;
-use Statsig\Exceptions\StatsigUserException;
+use Statsig\Exceptions\StatsigBaseException;
 use Exception;
 
 class ErrorBoundary
@@ -12,18 +10,20 @@ class ErrorBoundary
     const ENDPOINT = 'https://statsigapi.net/v1/sdk_exception';
     private string $api_key;
     private array $seen;
+    private \GuzzleHttp\Client $client;
 
-    function __construct($api_key)
+    function __construct(string $api_key)
     {
         $this->api_key = $api_key;
         $this->seen = [];
+        $this->client = new \GuzzleHttp\Client();
     }
 
     function capture(callable $task, callable $recover, ...$args)
     {
         try {
             return $task(...$args);
-        } catch (EventQueueSizeException | StatsigUserException | InvalidSDKKeyException $e) {
+        } catch (StatsigBaseException $e) {
             throw $e;
         } catch (Exception $e) {
             $this->logException($e);
@@ -45,30 +45,25 @@ class ErrorBoundary
             if ($this->api_key === null || in_array($name, $this->seen)) {
                 return;
             }
+            array_push($this->seen, $name);
             $body = [
                 'exception' => $name,
                 'info' => $e->getTraceAsString(),
                 'statsigMetadata' => StatsigMetadata::getJson()
             ];
-            $curl = curl_init();
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => ErrorBoundary::ENDPOINT,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 20,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => json_encode($body),
-                CURLOPT_HTTPHEADER => array(
-                    "STATSIG-API-KEY: {$this->api_key}",
-                    "STATSIG-SDK-TYPE: " . StatsigMetadata::SDK_TYPE,
-                    "STATSIG-SDK-VERSION: " . StatsigMetadata::VERSION,
-                    'Content-Type: application/json'
-                ),
-            ));
-            curl_exec($curl);
+            $this->client->request('POST', ErrorBoundary::ENDPOINT, [
+                'max' => 10,
+                'protocols' => ['https'],
+                'timeout' => 20,
+                'version' => 2.0,
+                'body' => json_encode($body),
+                'headers' => [
+                    'STATSIG-API-KEY' => $this->api_key,
+                    'STATSIG-SDK-TYPE' => StatsigMetadata::SDK_TYPE,
+                    'STATSIG-SDK-VERSION' => StatsigMetadata::VERSION,
+                    'Content-Type' => 'application/json',
+                ]
+            ]);
         } catch (Exception $e) {
         }
     }
