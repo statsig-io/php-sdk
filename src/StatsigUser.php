@@ -2,7 +2,7 @@
 
 namespace Statsig;
 
-use Exception;
+use Statsig\Exceptions\StatsigUserException;
 
 class StatsigUser
 {
@@ -18,11 +18,13 @@ class StatsigUser
     private ?array $custom_ids = null;
     private ?array $statsig_environment = null;
 
-    static function withUserID(string $user_id): StatsigUser {
+    static function withUserID(string $user_id): StatsigUser
+    {
         return new StatsigUser($user_id);
     }
 
-    static function withCustomIDs(array $custom_ids): StatsigUser {
+    static function withCustomIDs(array $custom_ids): StatsigUser
+    {
         return new StatsigUser(null, $custom_ids);
     }
 
@@ -30,6 +32,11 @@ class StatsigUser
     {
         $this->user_id = $user_id;
         return $this;
+    }
+
+    function getUserID(): ?string
+    {
+        return $this->user_id;
     }
 
     function setEmail(?string $email): StatsigUser
@@ -86,6 +93,11 @@ class StatsigUser
         return $this;
     }
 
+    function getCustomIDs(): ?array
+    {
+        return $this->custom_ids;
+    }
+
     function setStatsigEnvironment(?array $environment): StatsigUser
     {
         $this->statsig_environment = $environment;
@@ -118,11 +130,15 @@ class StatsigUser
         return array_filter($user);
     }
 
-    function assertUserIsIdentifiable() {
+    /**
+     * @throws StatsigUserException - User must have a userID or customID for the server SDK to work.
+     */
+    function assertUserIsIdentifiable()
+    {
         $is_user_empty = $this->user_id === null || trim($this->user_id) === '';
         $is_customer_ids_empty = $this->custom_ids === null || count($this->custom_ids) === 0;
         if ($is_user_empty && $is_customer_ids_empty) {
-            throw new Exception("User must have a userID or customID for the server SDK to work. See https://docs.statsig.com/messages/serverRequiredUserID/ for more details.");
+            throw new StatsigUserException("User must have a userID or customID for the server SDK to work. See https://docs.statsig.com/messages/serverRequiredUserID/ for more details.");
         }
     }
 

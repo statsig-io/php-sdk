@@ -4,6 +4,7 @@ namespace Statsig;
 
 use Statsig\Adapters\IDataAdapter;
 use Statsig\Adapters\ILoggingAdapter;
+use Statsig\Exceptions\EventQueueSizeException;
 use Exception;
 
 class StatsigOptions
@@ -47,7 +48,7 @@ class StatsigOptions
     function setEventQueueSize(int $size)
     {
         if ($size < 10 || $size > 1000) {
-            throw new Exception("Given size cannot be less than 10 or greater than 1000");
+            throw new EventQueueSizeException("Given size cannot be less than 10 or greater than 1000");
         }
         $this->event_queue_size = $size;
     }
@@ -56,6 +57,4 @@ class StatsigOptions
     {
         return $this->event_queue_size;
     }
-
-
 }
