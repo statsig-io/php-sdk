@@ -39,6 +39,15 @@ class Evaluator
         return $this->eval($user, $def);
     }
 
+    function getLayer($user, $layer): ConfigEvaluation
+    {
+        $def = $this->store->getLayerDefinition($layer);
+        if ($def === null) {
+            return new ConfigEvaluation(false, "");
+        }
+        return $this->eval($user, $def);
+    }
+
     function eval($user, $config): ConfigEvaluation
     {
         if (!$config["enabled"]) {
@@ -53,11 +62,32 @@ class Evaluator
             }
             $secondary_exposures = array_merge($secondary_exposures, $rule_result->secondary_exposures);
             if ($rule_result->bool_value === true) {
+                $delegate_result = $this->evalDelegate($user, $rule, $secondary_exposures);
+                if ($delegate_result !== null) {
+                    return $delegate_result;
+                }
                 $pass = Utils::evalPassPercentage($user->toEvaluationDictionary(), $rule, $config);
                 return new ConfigEvaluation($pass === true, $rule["id"], $pass === true ? $rule["returnValue"] : $config["defaultValue"], $secondary_exposures);
             }
         }
         return new ConfigEvaluation(false, "default", $config["defaultValue"], $secondary_exposures);
+    }
+
+    function evalDelegate($user, $rule, $exposures): ?ConfigEvaluation  {
+        $config_delegate = $rule["configDelegate"] ?? null;
+        if ($config_delegate === null) {
+            return null;
+        }
+        $config = $this->store->getConfigDefinition($config_delegate);
+        if ($config === null) {
+            return null;
+        }
+        $delegate_result = $this->eval($user, $config);
+        $delegate_result->explicit_parameters = $config["explicitParameters"] ?? [];
+        $delegate_result->allocated_experiment = $config_delegate;
+        $delegate_result->secondary_exposures = array_merge($exposures, $delegate_result->secondary_exposures);
+        $delegate_result->undelegated_secondary_exposures = $exposures;
+        return $delegate_result;
     }
 
     function evalRule($user, $rule): ConfigEvaluation

@@ -55,6 +55,24 @@ class StatsigLogger
         $this->enqueue($json);
     }
 
+    function logLayerExposure(StatsigUser $user, string $layer, string $rule_id, string $parameter, ConfigEvaluation $evaluation)
+    {
+        $exposure = new StatsigEvent("statsig::layer_exposure");
+        $exposure->setUser($user);
+        $is_explicit = in_array($parameter, $evaluation->explicit_parameters);
+        $exposure->setMetadata([
+            "config" => $layer,
+            "ruleID" => $rule_id,
+            "allocatedExperiment" => $is_explicit ? $evaluation->allocated_experiment : "",
+            "parameterName" => $parameter,
+            "isExplicitParameter" => $is_explicit ? "true" : "false",
+        ]);
+        $json = $exposure->toJson();
+        $secondary_exposures = $evaluation->undelegated_secondary_exposures;
+        $json->{"secondaryExposures"} = $secondary_exposures ?? [];
+        $this->enqueue($json);
+    }
+
     function enqueue($json)
     {
         $this->events[] = $json;

@@ -11,6 +11,8 @@ class ConfigSpecs
     public int $fetch_time;
     public array $gates = [];
     public array $configs = [];
+    public array $layers = [];
+    public \Ds\Map $experiment_to_layer;
 
     public static function sync(IDataAdapter $adapter, StatsigNetwork $network): ?ConfigSpecs
     {
@@ -18,11 +20,14 @@ class ConfigSpecs
         $specs = ConfigSpecs::fromJson($json);
 
         if ($specs !== null) {
-            $adapter->set(self::RULESETS_KEY, json_encode([
+            $json = json_encode([
                 "fetch_time" => $specs->fetch_time,
                 "gates" => $specs->gates,
-                "configs" => $specs->configs
-            ]));
+                "configs" => $specs->configs,
+                "layers" => $specs->layers,
+                "experiment_to_layer" => $specs->experiment_to_layer
+            ]);
+            $adapter->set(self::RULESETS_KEY, $json);
         }
 
         return $specs;
@@ -30,7 +35,7 @@ class ConfigSpecs
 
     public static function loadFromDataAdapter(IDataAdapter $adapter): ?ConfigSpecs
     {
-        $json = @json_decode($adapter->get(self::RULESETS_KEY), true);
+        $json = @json_decode($adapter->get(self::RULESETS_KEY), true, 512, JSON_BIGINT_AS_STRING);
         if ($json === null) {
             return null;
         }
@@ -38,6 +43,10 @@ class ConfigSpecs
         $result = new ConfigSpecs();
         $result->gates = $json["gates"] ?? [];
         $result->configs = $json["configs"] ?? [];
+        $result->layers = $json["layers"] ?? [];
+        $result->experiment_to_layer = isset($json["experiment_to_layer"])
+            ? new \Ds\Map($json["experiment_to_layer"]) 
+            : new \Ds\Map();
         $result->fetch_time = $json["fetch_time"] ?? 0;
         return $result;
     }
@@ -58,9 +67,26 @@ class ConfigSpecs
             $parsed_configs[$json["dynamic_configs"][$i]["name"]] = $json["dynamic_configs"][$i];
         }
 
+        $parsed_layers = [];
+        for ($i = 0; $i < count($json["layer_configs"]); $i++) {
+            $parsed_layers[$json["layer_configs"][$i]["name"]] = $json["layer_configs"][$i];
+        }
+
+        $parsed_experiment_to_layer = new \Ds\Map();
+        if (isset($json["layers"])) {
+            $layer_to_experiments_map = new \Ds\Map($json["layers"]);
+            foreach ($layer_to_experiments_map as $layer_name => $experiments) {
+                foreach ($experiments as $experiment) {
+                    $experiment_to_layer[$experiment] = $layer_name;
+                }
+            }
+        }
+
         $result = new ConfigSpecs();
         $result->gates = $parsed_gates;
         $result->configs = $parsed_configs;
+        $result->layers = $parsed_layers;
+        $result->experiment_to_layer = $parsed_experiment_to_layer;
         $result->fetch_time = floor(microtime(true) * 1000);
         return $result;
     }

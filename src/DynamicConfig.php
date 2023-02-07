@@ -17,7 +17,7 @@ class DynamicConfig
 
         // We re-decode here to treat associative arrays as objects, this allows us
         // to differentiate between array ([1,2]) and object (['a' => 'b'])
-        $this->value = (array) json_decode(json_encode($value));
+        $this->value = (array) json_decode(json_encode($value), null, 512, JSON_BIGINT_AS_STRING);
     }
 
     function get(string $field, $default)
