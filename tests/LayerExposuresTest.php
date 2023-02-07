@@ -6,11 +6,8 @@ use PHPUnit\Framework\TestCase;
 use Statsig\Adapters\LocalFileDataAdapter;
 use Statsig\Adapters\LocalFileLoggingAdapter;
 use Statsig\StatsigServer;
-use Statsig\StatsigNetwork;
-use Statsig\StatsigStore;
 use Statsig\StatsigUser;
 use Statsig\StatsigOptions;
-use Statsig\StatsigEvent;
 
 class LayerExposuresTest extends TestCase
 {
@@ -20,10 +17,9 @@ class LayerExposuresTest extends TestCase
 
     protected function setup(): void
     {
-        $config_adapter = new LocalFileDataAdapter();
+        $config_adapter = new LocalFileDataAdapter("/tmp/statsig/layer_exposures_test");
         $logging_adapter = new LocalFileLoggingAdapter("../../tests/testdata.log");
         $options = new StatsigOptions($config_adapter, $logging_adapter);
-        $store = new StatsigStore(new StatsigNetwork(), $options);
         $this->statsig = new StatsigServer("secret-key", $options);
         $this->user = StatsigUser::withUserID("123");
 
