@@ -107,7 +107,7 @@ class IDList
 
     static function getIDListFromAdapter(IDataAdapter $adapter, string $name): ?IDList
     {
-        $json = @json_decode($adapter->get(self::ID_LIST_KEY . "::$name"), true, 512, JSON_BIGINT_AS_STRING);
+        $json = @json_decode($adapter->get(self::ID_LIST_KEY . "::$name"), true);
         if ($json === null) {
             return null;
         }
@@ -131,7 +131,7 @@ class IDList
 
     static function updateActiveIDLists(IDataAdapter $adapter, array $id_list_names)
     {
-        $old_lists = json_decode($adapter->get(self::ID_LIST_KEY) ?? "[]", true, 512, JSON_BIGINT_AS_STRING);
+        $old_lists = json_decode($adapter->get(self::ID_LIST_KEY) ?? "[]", true);
 
         $id_list_paths = [];
         foreach ($id_list_names as $name) {

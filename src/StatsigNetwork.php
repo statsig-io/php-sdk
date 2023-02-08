@@ -89,7 +89,7 @@ class StatsigNetwork
         ));
         $response = curl_exec($curl);
         curl_close($curl);
-        return json_decode($response, true, 512, JSON_BIGINT_AS_STRING);
+        return json_decode($response, true);
     }
 
     function multiGetRequest($requests): array

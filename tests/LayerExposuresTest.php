@@ -23,7 +23,7 @@ class LayerExposuresTest extends TestCase
         $this->statsig = new StatsigServer("secret-key", $options);
         $this->user = StatsigUser::withUserID("123");
 
-        $contents = json_decode(file_get_contents(__DIR__ . "/layer_exposures_download_config_specs.json"), true, 512, JSON_BIGINT_AS_STRING);
+        $contents = json_decode(file_get_contents(__DIR__ . "/layer_exposures_download_config_specs.json"), true);
         TestUtils::mockNetworkOnStatsigInstance($this->statsig, function ($method, $endpoint, $input) use ($contents) {
             return $endpoint == "download_config_specs" ? $contents : null;
         });
@@ -90,18 +90,24 @@ class LayerExposuresTest extends TestCase
 
     public function testDiffferentObjectTypeLogging()
     {
+        $expected_events = 0;
         foreach ($this->methods as $index => $method) {
             $layer = $this->statsig->getLayer($this->user, "different_object_type_logging_layer");
             call_user_func_array(array($layer, $method), array("a_bool", false));
             call_user_func_array(array($layer, $method), array("an_int", 0));
             call_user_func_array(array($layer, $method), array("a_double", 0.0));
-            call_user_func_array(array($layer, $method), array("a_long", "0"));
+            call_user_func_array(array($layer, $method), array("a_long", 0)); // expected to fail on getTyped
             call_user_func_array(array($layer, $method), array("a_string", "err"));
             call_user_func_array(array($layer, $method), array("an_array", []));
             call_user_func_array(array($layer, $method), array("an_object", (object)[]));
             $this->statsig->flush();
 
-            $this->assertEventsFlushed(1 + $index, 7 * (1 + $index));
+            if ($method === "getTyped") {
+                $expected_events += 6;
+            } else {
+                $expected_events += 7;
+            }
+            $this->assertEventsFlushed(1 + $index, $expected_events);
         }
     }
 
