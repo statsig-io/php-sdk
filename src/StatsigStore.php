@@ -49,13 +49,6 @@ class StatsigStore
         return $this->specs->layers[$layer];
     }
 
-    function getExperimentLayer(string $experiment)
-    {
-        $this->ensureSpecFreshness();
-
-        return $this->specs->experiment_to_layer->get($experiment, null);
-    }
-
     function getIDList(string $id_list_name): ?IDList
     {
         return IDList::getIDListFromAdapter($this->data_adapter, $id_list_name);
