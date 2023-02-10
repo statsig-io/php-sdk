@@ -404,6 +404,8 @@ class Evaluator
     function getClientInitializeResponse(StatsigUser $user)
     {
         $this->store->ensureSpecFreshness();
+        $this->store->ensureIDListsFreshness();
+
         if (!$this->store->isReadyForChecks()) {
             return null;
         }

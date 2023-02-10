@@ -102,4 +102,9 @@ class StatsigStore
 
         $this->specs = ConfigSpecs::sync($this->data_adapter, $this->network);
     }
+
+    function ensureIDListsFreshness()
+    {
+        IDList::sync($this->data_adapter, $this->network);
+    }
 }

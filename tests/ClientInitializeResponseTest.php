@@ -41,19 +41,13 @@ class ClientInitializeResponseTest extends TestCase
     public function testProd()
     {
         list($server_res, $sdk_res) = $this->getClientInitializeResponses("https://statsigapi.net/v1");
-        // $this->assertEquals(json_encode($server_res), json_encode($sdk_res));
+        $this->assertEquals(json_encode($server_res), json_encode($sdk_res));
     }
 
     public function testStaging()
     {
         list($server_res, $sdk_res) = $this->getClientInitializeResponses("https://staging.statsigapi.net/v1");
-        // $this->assertEquals(json_encode($server_res), json_encode($sdk_res));
-        $sdk_res_file = fopen("sdk_res.json", "w");
-        fwrite($sdk_res_file, json_encode($sdk_res));
-        fclose($sdk_res_file);
-        $server_res_file = fopen("server_res.json", "w");
-        fwrite($server_res_file, json_encode($server_res));
-        fclose($server_res_file);
+        $this->assertEquals(json_encode($server_res), json_encode($sdk_res));
     }
 
     private function getClientInitializeResponses(string $api)

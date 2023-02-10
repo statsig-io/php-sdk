@@ -76,16 +76,12 @@ class ClientInitializeResponse
             if ($config_spec["hasSharedParams"]) {
                 $result["is_in_layer"] = true;
                 $result["explicit_parameters"] = $config_spec["explicitParameters"] ?? [];
-                $layer_name = $this->store->getExperimentLayer($config_name);
-                if ($layer_name === null) {
-                    return;
-                }
+                $layer_name = $this->store->getExperimentLayer($config_name) ?? "";
                 $layer = $this->store->getLayerDefinition($layer_name);
-                if ($layer === null) {
-                    return;
+                if ($layer !== null) {
+                    $layer_value = $layer["defaultValue"] ?? (object)[];
+                    $result["value"] = array_merge($result["value"], $layer_value);
                 }
-                $layer_value = $layer["defaultValue"] ?? (object)[];
-                $result["value"] = array_merge($result["value"], $layer_value);
             }
         }
         return array($hashed_name, $result);
@@ -148,7 +144,7 @@ class ClientInitializeResponse
             "feature_gates" => $feature_gates,
             "dynamic_configs" => $dynamic_configs,
             "layer_configs" => $layer_configs,
-            "sdkParams" => (object)[],
+            "sdkParams" => [],
             "has_updates" => true,
             "generator" => "statsig-php-sdk",
             "evaluated_keys" => $evaluated_keys,
