@@ -36,7 +36,7 @@ class Layer
 
     /**
      * Returns the value if field exists and is the same type as $default, $default otherwise.
-     * NOTE: Large integers are stored as a double in Ruby and lose precision
+     * NOTE: Large integers are stored as a double in PHP and lose precision
      */
     function getTyped(string $field, $default)
     {
