@@ -130,6 +130,17 @@ class E2ETest extends TestCase
                     $this->assertEquals($config["rule_id"], $eval_result->rule_id);
                     $this->assertEquals($config["secondary_exposures"], $eval_result->secondary_exposures);
                 }
+
+                $layers = $val["layer_configs"];
+                foreach ($layers as $layer) {
+                    $name = $layer["name"];
+                    $this->statsig->getLayer($statsig_user, $name);
+                    $eval_result = $this->evaluator->getLayer($statsig_user, $name);
+                    $server_result = $layer["value"];
+                    $this->assertEquals($server_result, $eval_result->json_value);
+                    $this->assertEquals($layer["rule_id"], $eval_result->rule_id);
+                    $this->assertEquals($layer["secondary_exposures"], $eval_result->secondary_exposures);
+                }
             }
         }
     }

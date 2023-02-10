@@ -39,6 +39,16 @@ class StatsigStore
         return $this->specs->configs[$config];
     }
 
+    function getLayerDefinition(string $layer)
+    {
+        $this->ensureSpecFreshness();
+
+        if (!array_key_exists($layer, $this->specs->layers)) {
+            return null;
+        }
+        return $this->specs->layers[$layer];
+    }
+
     function getIDList(string $id_list_name): ?IDList
     {
         return IDList::getIDListFromAdapter($this->data_adapter, $id_list_name);

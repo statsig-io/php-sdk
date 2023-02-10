@@ -96,6 +96,40 @@ class StatsigServer
         return $this->error_boundary->capture($task, $fallback);
     }
 
+    function getLayer(StatsigUser $user, string $layer): Layer
+    {
+        $task = function () use ($user, $layer) {
+            $user = $this->normalizeUser($user);
+            $res = $this->evaluator->getLayer($user, $layer);
+            $json_value = $res->json_value;
+            $rule_id = $res->rule_id;
+
+            if ($res->fetch_from_server) {
+                $net_result = $this->network->getConfig($user, $layer);
+                if (key_exists("value", $net_result ?? []) && gettype($net_result["value"]) === 'array') {
+                    $json_value = $net_result["value"];
+                    $rule_id = $net_result["rule_id"];
+                } else {
+                    return new Layer($layer);
+                }
+            }
+            $log_exposure_fn = function ($parameter) use ($user, $layer, $rule_id, $res) {
+                $this->logger->logLayerExposure(
+                    $user,
+                    $layer,
+                    $rule_id,
+                    $parameter,
+                    $res,
+                );
+            };
+            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn);
+        };
+        $fallback = function () use ($layer) {
+            return new Layer($layer);
+        };
+        return $this->error_boundary->capture($task, $fallback);
+    }
+
     function logEvent(StatsigEvent $event)
     {
         $task = function () use ($event) {

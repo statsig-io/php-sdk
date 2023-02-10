@@ -11,6 +11,7 @@ class ConfigSpecs
     public int $fetch_time;
     public array $gates = [];
     public array $configs = [];
+    public array $layers = [];
 
     public static function sync(IDataAdapter $adapter, StatsigNetwork $network): ?ConfigSpecs
     {
@@ -18,11 +19,13 @@ class ConfigSpecs
         $specs = ConfigSpecs::fromJson($json);
 
         if ($specs !== null) {
-            $adapter->set(self::RULESETS_KEY, json_encode([
+            $json = json_encode([
                 "fetch_time" => $specs->fetch_time,
                 "gates" => $specs->gates,
-                "configs" => $specs->configs
-            ]));
+                "configs" => $specs->configs,
+                "layers" => $specs->layers,
+            ]);
+            $adapter->set(self::RULESETS_KEY, $json);
         }
 
         return $specs;
@@ -38,6 +41,7 @@ class ConfigSpecs
         $result = new ConfigSpecs();
         $result->gates = $json["gates"] ?? [];
         $result->configs = $json["configs"] ?? [];
+        $result->layers = $json["layers"] ?? [];
         $result->fetch_time = $json["fetch_time"] ?? 0;
         return $result;
     }
@@ -58,9 +62,15 @@ class ConfigSpecs
             $parsed_configs[$json["dynamic_configs"][$i]["name"]] = $json["dynamic_configs"][$i];
         }
 
+        $parsed_layers = [];
+        for ($i = 0; $i < count($json["layer_configs"]); $i++) {
+            $parsed_layers[$json["layer_configs"][$i]["name"]] = $json["layer_configs"][$i];
+        }
+
         $result = new ConfigSpecs();
         $result->gates = $parsed_gates;
         $result->configs = $parsed_configs;
+        $result->layers = $parsed_layers;
         $result->fetch_time = floor(microtime(true) * 1000);
         return $result;
     }
