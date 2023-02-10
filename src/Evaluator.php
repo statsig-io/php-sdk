@@ -67,13 +67,23 @@ class Evaluator
                     return $delegate_result;
                 }
                 $pass = Utils::evalPassPercentage($user->toEvaluationDictionary(), $rule, $config);
-                return new ConfigEvaluation($pass === true, $rule["id"], $pass === true ? $rule["returnValue"] : $config["defaultValue"], $secondary_exposures);
+                return new ConfigEvaluation(
+                    $pass === true,
+                    $rule["id"],
+                    $pass === true ? $rule["returnValue"] : $config["defaultValue"],
+                    $secondary_exposures,
+                    false,
+                    "",
+                    [],
+                    $rule_result->is_experiment_group,
+                );
             }
         }
         return new ConfigEvaluation(false, "default", $config["defaultValue"], $secondary_exposures);
     }
 
-    function evalDelegate($user, $rule, $exposures): ?ConfigEvaluation  {
+    function evalDelegate($user, $rule, $exposures): ?ConfigEvaluation
+    {
         $config_delegate = $rule["configDelegate"] ?? null;
         if ($config_delegate === null) {
             return null;
@@ -114,6 +124,7 @@ class Evaluator
             }
             $result->secondary_exposures = array_merge($result->secondary_exposures, $condition_result->secondary_exposures);
         }
+        $result->is_experiment_group = $rule["isExperimentGroup"] ?? false;
         return $result;
     }
 
@@ -388,5 +399,16 @@ class Evaluator
             default:
                 return null;
         }
+    }
+
+    function getClientInitializeResponse(StatsigUser $user)
+    {
+        $this->store->ensureSpecFreshness();
+        if (!$this->store->isReadyForChecks()) {
+            return null;
+        }
+        return (new ClientInitializeResponse($user, $this->store, function ($user, $config) {
+            return $this->eval($user, $config);
+        }))->getFormattedResponse();
     }
 }

@@ -141,6 +141,11 @@ class StatsigServer
         return $this->error_boundary->swallow($task);
     }
 
+    function getClientInitializeResponse(StatsigUser $user)
+    {
+        return $this->evaluator->getClientInitializeResponse($user);
+    }
+
     function flush()
     {
         $this->logger->flush();

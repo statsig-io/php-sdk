@@ -19,6 +19,11 @@ class StatsigStore
         $this->specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
     }
 
+    function isReadyForChecks()
+    {
+        return $this->specs !== null && $this->specs->fetch_time !== 0;
+    }
+
     function getGateDefinition(string $gate)
     {
         $this->ensureSpecFreshness();
@@ -27,6 +32,12 @@ class StatsigStore
             return null;
         }
         return $this->specs->gates[$gate];
+    }
+
+    function getAllGates()
+    {
+        $this->ensureSpecFreshness();
+        return $this->specs->gates;
     }
 
     function getConfigDefinition(string $config)
@@ -39,6 +50,12 @@ class StatsigStore
         return $this->specs->configs[$config];
     }
 
+    function getAllConfigs()
+    {
+        $this->ensureSpecFreshness();
+        return $this->specs->configs;
+    }
+
     function getLayerDefinition(string $layer)
     {
         $this->ensureSpecFreshness();
@@ -47,6 +64,22 @@ class StatsigStore
             return null;
         }
         return $this->specs->layers[$layer];
+    }
+
+    function getAllLayers()
+    {
+        $this->ensureSpecFreshness();
+        return $this->specs->layers;
+    }
+
+    function getExperimentLayer(string $experiment)
+    {
+        $this->ensureSpecFreshness();
+
+        if (!array_key_exists($experiment, $this->specs->experiment_to_layer)) {
+            return null;
+        }
+        return $this->specs->experiment_to_layer[$experiment];
     }
 
     function getIDList(string $id_list_name): ?IDList
