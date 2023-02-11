@@ -12,7 +12,7 @@ class ConfigEvaluation
     public array $undelegated_secondary_exposures;
     public string $allocated_experiment;
     public array $explicit_parameters;
-
+    public bool $is_experiment_group;
 
     function __construct(
         bool $bool_value, 
@@ -21,7 +21,8 @@ class ConfigEvaluation
         array $secondary_exposures = [],
         bool $fetch_from_server = false,
         string $allocated_experiment = "",
-        array $explicit_parameters = [])
+        array $explicit_parameters = [],
+        bool $is_experiment_group = false)
     {
         $this->bool_value = $bool_value;
         $this->rule_id = $rule_id;
@@ -31,5 +32,6 @@ class ConfigEvaluation
         $this->fetch_from_server = $fetch_from_server;
         $this->allocated_experiment = $allocated_experiment;
         $this->explicit_parameters = $explicit_parameters;
+        $this->is_experiment_group = $is_experiment_group;
     }
 }
