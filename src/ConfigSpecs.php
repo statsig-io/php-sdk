@@ -35,7 +35,7 @@ class ConfigSpecs
 
     public static function loadFromDataAdapter(IDataAdapter $adapter): ?ConfigSpecs
     {
-        $json = @json_decode($adapter->get(self::RULESETS_KEY), true);
+        $json = @json_decode($adapter->get(self::RULESETS_KEY), true, 512, JSON_BIGINT_AS_STRING);
         if ($json === null) {
             return null;
         }

@@ -66,7 +66,7 @@ class LocalFileLoggingAdapter implements ILoggingAdapter
             if (!trim($line)) {
                 continue;
             }
-            $events = array_merge($events, json_decode($line, true));
+            $events = array_merge($events, json_decode($line, true, 512, JSON_BIGINT_AS_STRING));
         }
 
         unlink($working_file);

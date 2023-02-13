@@ -23,7 +23,7 @@ class LayerExposuresTest extends TestCase
         $this->statsig = new StatsigServer("secret-key", $options);
         $this->user = StatsigUser::withUserID("123");
 
-        $contents = json_decode(file_get_contents(__DIR__ . "/layer_exposures_download_config_specs.json"), true);
+        $contents = json_decode(file_get_contents(__DIR__ . "/layer_exposures_download_config_specs.json"), true, 512, JSON_BIGINT_AS_STRING);
         TestUtils::mockNetworkOnStatsigInstance($this->statsig, function ($method, $endpoint, $input) use ($contents) {
             return $endpoint == "download_config_specs" ? $contents : null;
         });
@@ -143,7 +143,7 @@ class LayerExposuresTest extends TestCase
                 continue;
             }
 
-            $json = json_decode($line, true);
+            $json = json_decode($line, true, 512, JSON_BIGINT_AS_STRING);
             $events = array_merge($events, $json);
         }
         $this->assertCount($expected_events, $events);

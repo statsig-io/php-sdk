@@ -79,7 +79,7 @@ class ClientInitializeResponseTest extends TestCase
         ));
         $res = curl_exec($curl);
         curl_close($curl);
-        $server_response = (array) json_decode($res, true);
+        $server_response = (array) json_decode($res, true, 512, JSON_BIGINT_AS_STRING);
         $sdk_response = $this->statsig->getClientInitializeResponse($this->user);
         $this->postProcessResponse($server_response);
         $this->postProcessResponse($sdk_response);
