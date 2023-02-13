@@ -96,7 +96,7 @@ class LayerExposuresTest extends TestCase
             call_user_func_array(array($layer, $method), array("a_bool", false));
             call_user_func_array(array($layer, $method), array("an_int", 0));
             call_user_func_array(array($layer, $method), array("a_double", 0.0));
-            call_user_func_array(array($layer, $method), array("a_long", 0)); // expected to fail on getTyped
+            $long_value = call_user_func_array(array($layer, $method), array("a_long", 0)); // expected to fail on getTyped
             call_user_func_array(array($layer, $method), array("a_string", "err"));
             call_user_func_array(array($layer, $method), array("an_array", []));
             call_user_func_array(array($layer, $method), array("an_object", (object)[]));
@@ -105,6 +105,7 @@ class LayerExposuresTest extends TestCase
             if ($method === "getTyped") {
                 $expected_events += 6;
             } else {
+                $this->assertTrue("9223372036854776000" === $long_value);
                 $expected_events += 7;
             }
             $this->assertEventsFlushed(1 + $index, $expected_events);
