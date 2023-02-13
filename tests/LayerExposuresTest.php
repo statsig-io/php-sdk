@@ -23,7 +23,7 @@ class LayerExposuresTest extends TestCase
         $this->statsig = new StatsigServer("secret-key", $options);
         $this->user = StatsigUser::withUserID("123");
 
-        $contents = json_decode(file_get_contents(__DIR__ . "/layer_exposures_download_config_specs.json"), true);
+        $contents = json_decode(file_get_contents(__DIR__ . "/layer_exposures_download_config_specs.json"), true, 512, JSON_BIGINT_AS_STRING);
         TestUtils::mockNetworkOnStatsigInstance($this->statsig, function ($method, $endpoint, $input) use ($contents) {
             return $endpoint == "download_config_specs" ? $contents : null;
         });
@@ -96,7 +96,7 @@ class LayerExposuresTest extends TestCase
             call_user_func_array(array($layer, $method), array("a_bool", false));
             call_user_func_array(array($layer, $method), array("an_int", 0));
             call_user_func_array(array($layer, $method), array("a_double", 0.0));
-            call_user_func_array(array($layer, $method), array("a_long", 0)); // expected to fail on getTyped
+            $long_value = call_user_func_array(array($layer, $method), array("a_long", 0)); // expected to fail on getTyped
             call_user_func_array(array($layer, $method), array("a_string", "err"));
             call_user_func_array(array($layer, $method), array("an_array", []));
             call_user_func_array(array($layer, $method), array("an_object", (object)[]));
@@ -105,6 +105,7 @@ class LayerExposuresTest extends TestCase
             if ($method === "getTyped") {
                 $expected_events += 6;
             } else {
+                $this->assertTrue("9223372036854776000" === $long_value);
                 $expected_events += 7;
             }
             $this->assertEventsFlushed(1 + $index, $expected_events);
@@ -143,7 +144,7 @@ class LayerExposuresTest extends TestCase
                 continue;
             }
 
-            $json = json_decode($line, true);
+            $json = json_decode($line, true, 512, JSON_BIGINT_AS_STRING);
             $events = array_merge($events, $json);
         }
         $this->assertCount($expected_events, $events);

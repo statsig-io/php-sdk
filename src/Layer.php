@@ -18,7 +18,7 @@ class Layer
 
         // We re-decode here to treat associative arrays as objects, this allows us
         // to differentiate between array ([1,2]) and object (['a' => 'b'])
-        $this->value = (array) json_decode(json_encode($value), null);
+        $this->value = (array) json_decode(json_encode($value), null, 512, JSON_BIGINT_AS_STRING);
     }
 
     /**
@@ -36,7 +36,7 @@ class Layer
 
     /**
      * Returns the value if field exists and is the same type as $default, $default otherwise.
-     * NOTE: Large integers are stored as a double in PHP and lose precision
+     * NOTE: Large integers are decoded as strings to avoid integer overflow
      */
     function getTyped(string $field, $default)
     {
