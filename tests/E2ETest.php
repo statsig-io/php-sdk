@@ -81,7 +81,17 @@ class E2ETest extends TestCase
         foreach ($this->cases as $entry) {
             foreach ($entry as $val) {
                 $user = $val["user"];
-                $statsig_user = StatsigUser::withUserID($user["userID"]);
+                $statsig_user = null;
+                if (array_key_exists("userID", $user)) {
+                    $statsig_user = StatsigUser::withUserID($user["userID"]);
+                    if (array_key_exists("customIDs", $user)) {
+                        $statsig_user = $statsig_user->setCustomIDs($user["customIDs"]);
+                    }
+                } else if (array_key_exists("customIDs", $user)) {
+                    $statsig_user = StatsigUser::withCustomIDs($user["customIDs"]);
+                } else {
+                    return null;
+                }
                 $statsig_user = $statsig_user
                     ->setAppVersion(array_key_exists("appVersion", $user) ? $user["appVersion"] : null)
                     ->setUserAgent(array_key_exists("userAgent", $user) ? $user["userAgent"] : null)
@@ -97,9 +107,6 @@ class E2ETest extends TestCase
                 }
                 if (array_key_exists("privateAttributes", $user)) {
                     $statsig_user = $statsig_user->setPrivateAttributes($user["privateAttributes"]);
-                }
-                if (array_key_exists("customIDs", $user)) {
-                    $statsig_user = $statsig_user->setCustomIDs($user["customIDs"]);
                 }
                 if (array_key_exists("locale", $user)) {
                     $statsig_user = $statsig_user->setLocale($user["locale"]);
