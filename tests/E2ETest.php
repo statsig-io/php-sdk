@@ -83,15 +83,24 @@ class E2ETest extends TestCase
                 $user = $val["user"];
                 $statsig_user = null;
                 if (array_key_exists("userID", $user)) {
-                    $statsig_user = StatsigUser::withUserID($user["userID"]);
-                    if (array_key_exists("customIDs", $user)) {
+                    try {
+                        $statsig_user = StatsigUser::withUserID($user["userID"]);
+
+                    } catch (Exception $e) {}
+                }
+
+                if (array_key_exists("customIDs", $user)) {
+                    if ($statsig_user === null) {
+                        $statsig_user = StatsigUser::withCustomIDs($user["customIDs"]);
+                    } else {
                         $statsig_user = $statsig_user->setCustomIDs($user["customIDs"]);
                     }
-                } else if (array_key_exists("customIDs", $user)) {
-                    $statsig_user = StatsigUser::withCustomIDs($user["customIDs"]);
-                } else {
+                }
+
+                if ($statsig_user === null) {
                     return null;
                 }
+
                 $statsig_user = $statsig_user
                     ->setAppVersion(array_key_exists("appVersion", $user) ? $user["appVersion"] : null)
                     ->setUserAgent(array_key_exists("userAgent", $user) ? $user["userAgent"] : null)

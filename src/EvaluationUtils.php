@@ -96,17 +96,17 @@ abstract class EvaluationUtils
         if (strtolower($lower_type) !== "userid") {
             $custom_ids = $user["customIDs"] ?? [];
             if (empty($custom_ids)) {
-                return '';
+                return null;
             }
             if (array_key_exists($id_type, $custom_ids)) {
                 return $custom_ids[$id_type];
             } else if (array_key_exists($lower_type, $custom_ids)) {
                 return $custom_ids[$lower_type];
             } else {
-                return '';
+                return null;
             }
         }
-        return $user["userID"];
+        return $user["userID"] ?? null;
     }
 
     public static function getFromUser($user, $field)
