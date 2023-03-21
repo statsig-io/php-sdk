@@ -92,6 +92,7 @@ class E2ETest extends TestCase
                 if (array_key_exists("customIDs", $user)) {
                     if ($statsig_user === null) {
                         $statsig_user = StatsigUser::withCustomIDs($user["customIDs"]);
+                        $statsig_user->setUserID($user["userID"] ?? null);
                     } else {
                         $statsig_user = $statsig_user->setCustomIDs($user["customIDs"]);
                     }

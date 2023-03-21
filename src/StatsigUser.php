@@ -127,7 +127,9 @@ class StatsigUser
             "statsigEnvironment" => $this->statsig_environment,
         ];
 
-        return array_filter($user);
+        return array_filter($user, function ($v) {
+            return $v !== null;
+        });
     }
 
     /**
