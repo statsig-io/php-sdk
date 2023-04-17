@@ -22,7 +22,7 @@ class LocalFileLoggingAdapter implements ILoggingAdapter
         $this->file_path = $file_path;
     }
 
-    function __destruct()
+    function shutdown()
     {
         $this->close();
     }

@@ -31,7 +31,7 @@ class StatsigServer
 
     function __destruct()
     {
-        $this->logger->flush();
+        $this->logger->shutdown();
     }
 
     function checkGate(StatsigUser $user, string $gate): bool

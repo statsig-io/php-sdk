@@ -18,11 +18,6 @@ class StatsigLogger
         $this->event_queue_size = $options->getEventQueueSize();
     }
 
-    public function __destruct()
-    {
-        $this->flush();
-    }
-
     function log($event)
     {
         $this->enqueue($event->toJson());
@@ -92,6 +87,14 @@ class StatsigLogger
             $this->logging_adapter->enqueueEvents($events);
         } else {
             $this->network->logEvents($events);
+        }
+    }
+
+    function shutdown() {
+        $this->flush();
+
+        if ($this->logging_adapter !== null) {
+            $this->logging_adapter->shutdown();
         }
     }
 }
