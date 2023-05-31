@@ -56,17 +56,17 @@ class ConfigSpecs
         }
 
         $parsed_gates = [];
-        for ($i = 0; $i < count($json["feature_gates"]); $i++) {
+        for ($i = 0; $i < count($json["feature_gates"] ?? []); $i++) {
             $parsed_gates[$json["feature_gates"][$i]["name"]] = $json["feature_gates"][$i];
         }
 
         $parsed_configs = [];
-        for ($i = 0; $i < count($json["dynamic_configs"]); $i++) {
+        for ($i = 0; $i < count($json["dynamic_configs"] ?? []); $i++) {
             $parsed_configs[$json["dynamic_configs"][$i]["name"]] = $json["dynamic_configs"][$i];
         }
 
         $parsed_layers = [];
-        for ($i = 0; $i < count($json["layer_configs"]); $i++) {
+        for ($i = 0; $i < count($json["layer_configs"] ?? []); $i++) {
             $parsed_layers[$json["layer_configs"][$i]["name"]] = $json["layer_configs"][$i];
         }
 
