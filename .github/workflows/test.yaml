@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-  
+    if: github.event_name != 'schedule' || github.repository.private
     runs-on: ubuntu-latest
     timeout-minutes: 15
     
