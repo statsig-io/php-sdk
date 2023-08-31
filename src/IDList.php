@@ -14,6 +14,7 @@ class IDList
     public array $ids;
 
     private const ID_LIST_KEY = "statsig.id_lists";
+    private const ID_LIST_LAST_SYNC_TIME_KEY = self::ID_LIST_KEY . "::__php_server_last_sync_time__";
 
     public function __construct(array $json, array $ids)
     {
@@ -25,7 +26,7 @@ class IDList
         $this->ids = $ids;
     }
 
-    static function sync(IDataAdapter $adapter, StatsigNetwork $network)
+    static function sync(IDataAdapter $adapter, StatsigNetwork $network): void
     {
         $id_lists_lookup = $network->postRequest("get_id_lists", json_encode(['statsigMetadata' => StatsigMetadata::getJson()]));
         if ($id_lists_lookup === null) {
@@ -102,7 +103,7 @@ class IDList
             IDList::saveToAdapter($adapter, $list_name, $list);
         }
 
-        IDList::updateActiveIDLists($adapter, array_keys($id_lists_lookup));
+        self::updateActiveIDLists($adapter, array_keys($id_lists_lookup));
     }
 
     static function getIDListFromAdapter(IDataAdapter $adapter, string $name): ?IDList
@@ -115,7 +116,11 @@ class IDList
         return new IDList($json["info"], $json["ids"]);
     }
 
-    static function saveToAdapter(IDataAdapter $adapter, string $name, IDList $list)
+    static function  getLastIDListSyncTimeFromAdapter(IDataAdapter $adapter): int  {
+        return (int) $adapter->get(self::ID_LIST_LAST_SYNC_TIME_KEY);
+    }
+
+    static function saveToAdapter(IDataAdapter $adapter, string $name, IDList $list): void
     {
         $adapter->set(self::ID_LIST_KEY . "::$name", json_encode([
             "info" => [
@@ -129,7 +134,7 @@ class IDList
         ]));
     }
 
-    static function updateActiveIDLists(IDataAdapter $adapter, array $id_list_names)
+    private static function updateActiveIDLists(IDataAdapter $adapter, array $id_list_names): void
     {
         $old_lists = json_decode($adapter->get(self::ID_LIST_KEY) ?? "[]", true, 512, JSON_BIGINT_AS_STRING);
 
@@ -145,11 +150,7 @@ class IDList
         }
 
         $adapter->set(self::ID_LIST_KEY, json_encode($id_list_paths));
-    }
-
-    private static function safe_get($array, $key, $fallback)
-    {
-        return array_key_exists($key, $array) ? $array[$key] : $fallback;
+        $adapter->set(self::ID_LIST_LAST_SYNC_TIME_KEY, floor(microtime(true) * 1000));
     }
 }
 

@@ -87,7 +87,7 @@ class StatsigStore
         return IDList::getIDListFromAdapter($this->data_adapter, $id_list_name);
     }
 
-    function ensureSpecFreshness()
+    function ensureSpecFreshness(): void
     {
         $current_time = floor(microtime(true) * 1000);
         if ($this->specs != null && ($current_time - $this->specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
@@ -103,8 +103,14 @@ class StatsigStore
         $this->specs = ConfigSpecs::sync($this->data_adapter, $this->network);
     }
 
-    function ensureIDListsFreshness()
+    function ensureIDListsFreshness(): void
     {
+        $current_time = floor(microtime(true) * 1000);
+        $last_fetch_time = IDList::getLastIDListSyncTimeFromAdapter($this->data_adapter);
+        if (($current_time - $last_fetch_time) <= $this->options->config_freshness_threshold_ms) {
+            return;
+        }
+
         IDList::sync($this->data_adapter, $this->network);
     }
 }

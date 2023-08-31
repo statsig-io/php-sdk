@@ -43,7 +43,8 @@ class IDListSyncingTest extends TestCase
         $this->assertEquals(1, $this->list_1_download_count);
         $this->assertEquals(1, $this->list_2_download_count);
         $this->assertEquals(0, $this->list_3_download_count);
-        $this->assertCount(3, self::getIDListFiles());
+
+        $this->assertCount(4, self::getIDListFiles(), "Should have 3 IDLists + 1 LastSyncTime file");
 
         $expected_list_1 = self::makeIDList("list_1", 3, 1, "file_id_1", ["1"]);
         $this->assertIDListEqual($expected_list_1, IDList::getIDListFromAdapter($this->adapter, "list_1"));
@@ -61,7 +62,7 @@ class IDListSyncingTest extends TestCase
         $this->assertEquals(1, $this->list_2_download_count);
         $this->assertEquals(0, $this->list_3_download_count);
 
-        $this->assertCount(2, self::getIDListFiles());
+        $this->assertCount(3, self::getIDListFiles(), "Should have 2 IDLists + 1 LastSyncTime File");
 
         $expected_list_1 = self::makeIDList("list_1", 12, 1, "file_id_1", ["2"]);
         $this->assertIDListEqual($expected_list_1, IDList::getIDListFromAdapter($this->adapter, "list_1"));
@@ -76,7 +77,7 @@ class IDListSyncingTest extends TestCase
         $this->assertEquals(1, $this->list_2_download_count);
         $this->assertEquals(0, $this->list_3_download_count);
 
-        $this->assertCount(2, self::getIDListFiles());
+        $this->assertCount(3, self::getIDListFiles(), "Should have 2 IDLists + 1 LastSyncTime File");
 
         $expected_list_1 = self::makeIDList("list_1", 3, 3, "file_id_1_a", ["3"]);
         $this->assertIDListEqual($expected_list_1, IDList::getIDListFromAdapter($this->adapter, "list_1"));
@@ -91,7 +92,7 @@ class IDListSyncingTest extends TestCase
         $this->assertEquals(1, $this->list_2_download_count);
         $this->assertEquals(0, $this->list_3_download_count);
 
-        $this->assertCount(2, self::getIDListFiles());
+        $this->assertCount(3, self::getIDListFiles(), "Should have 2 IDLists + 1 LastSyncTime File");
 
         $expected_list_1 = self::makeIDList("list_1", 3, 3, "file_id_1_a", ["3"]);
         $this->assertIDListEqual($expected_list_1, IDList::getIDListFromAdapter($this->adapter, "list_1"));
@@ -106,7 +107,7 @@ class IDListSyncingTest extends TestCase
         $this->assertEquals(1, $this->list_2_download_count);
         $this->assertEquals(1, $this->list_3_download_count);
 
-        $this->assertCount(3, self::getIDListFiles());
+        $this->assertCount(4, self::getIDListFiles(), "Should have 3 IDLists + 1 LastSyncTime File");
 
         $expected_list_1 = self::makeIDList("list_1", 3, 3, "file_id_1_a", ["3"]);
         $this->assertIDListEqual($expected_list_1, IDList::getIDListFromAdapter($this->adapter, "list_1"));
@@ -124,7 +125,7 @@ class IDListSyncingTest extends TestCase
         $this->assertEquals(1, $this->list_2_download_count);
         $this->assertEquals(1, $this->list_3_download_count);
 
-        $this->assertCount(3, self::getIDListFiles());
+        $this->assertCount(4, self::getIDListFiles(), "Should have 3 IDLists + 1 LastSyncTime File");
 
         $expected_list_1 = self::makeIDList("list_1", 21, 3, "file_id_1_a", ["3", "5", "6"]);
         $this->assertIDListEqual($expected_list_1, IDList::getIDListFromAdapter($this->adapter, "list_1"));
