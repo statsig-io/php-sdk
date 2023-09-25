@@ -39,10 +39,6 @@ class StatsigServer
         $task = function () use ($user, $gate) {
             $user = $this->normalizeUser($user);
             $res = $this->evaluator->checkGate($user, $gate);
-            if ($res->fetch_from_server) {
-                $net_result = $this->network->checkGate($user, $gate);
-                return key_exists("value", $net_result ?? []) && $net_result["value"] === true;
-            }
             $this->logger->logGateExposure(
                 $user,
                 $gate,
@@ -63,13 +59,6 @@ class StatsigServer
         $task = function () use ($user, $config) {
             $user = $this->normalizeUser($user);
             $res = $this->evaluator->getConfig($user, $config);
-            if ($res->fetch_from_server) {
-                $net_result = $this->network->getConfig($user, $config);
-                if (key_exists("value", $net_result ?? []) && gettype($net_result["value"]) === 'array') {
-                    return new DynamicConfig($config, $net_result["value"], $net_result["rule_id"]);
-                }
-                return new DynamicConfig($config);
-            }
             $this->logger->logConfigExposure(
                 $user,
                 $config,
@@ -103,16 +92,6 @@ class StatsigServer
             $res = $this->evaluator->getLayer($user, $layer);
             $json_value = $res->json_value;
             $rule_id = $res->rule_id;
-
-            if ($res->fetch_from_server) {
-                $net_result = $this->network->getConfig($user, $layer);
-                if (key_exists("value", $net_result ?? []) && gettype($net_result["value"]) === 'array') {
-                    $json_value = $net_result["value"];
-                    $rule_id = $net_result["rule_id"];
-                } else {
-                    return new Layer($layer);
-                }
-            }
             $log_exposure_fn = function ($parameter) use ($user, $layer, $rule_id, $res) {
                 $this->logger->logLayerExposure(
                     $user,

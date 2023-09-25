@@ -57,7 +57,7 @@ class Evaluator
         for ($i = 0; $i < count($config["rules"]); $i++) {
             $rule = $config["rules"][$i];
             $rule_result = $this->evalRule($user, $rule);
-            if ($rule_result->fetch_from_server) {
+            if ($rule_result->unsupported) {
                 return $rule_result;
             }
             $secondary_exposures = array_merge($secondary_exposures, $rule_result->secondary_exposures);
@@ -107,7 +107,7 @@ class Evaluator
         for ($i = 0; $i < count($rule["conditions"]); $i++) {
             $condition = $rule["conditions"][$i];
             $condition_result = $this->evalCondition($user, $condition);
-            if ($condition_result->fetch_from_server) {
+            if ($condition_result->unsupported) {
                 return $condition_result;
             }
             $condition_results[] = $condition_result;
@@ -116,8 +116,8 @@ class Evaluator
 
         for ($i = 0; $i < count($condition_results); $i++) {
             $condition_result = $condition_results[$i];
-            if ($condition_result->fetch_from_server) {
-                $result->fetch_from_server = true;
+            if ($condition_result->unsupported) {
+                $result->unsupported = true;
             }
             if ($condition_result->bool_value === false) {
                 $result->bool_value = false;
@@ -152,7 +152,7 @@ class Evaluator
                     "gateValue" => $nested->bool_value ? "true" : "false",
                     "ruleID" => $nested->rule_id,
                 ];
-                return new ConfigEvaluation($result, "", $nested->json_value, $all_exposures, $nested->fetch_from_server);
+                return new ConfigEvaluation($result, "", $nested->json_value, $all_exposures, $nested->unsupported);
             case 'ip_based':
                 $value = Utils::getFromUser($user, $field) ?? $this->getFromIP($user, $field);
                 break;
@@ -350,6 +350,7 @@ class Evaluator
                 return new ConfigEvaluation($a == $b);
             case 'in_segment_list':
             case 'not_in_segment_list':
+
                 $is_in_list = false;
                 $list = $this->store->getIDList($target);
                 if ($list instanceof IDList) {

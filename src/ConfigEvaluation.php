@@ -7,7 +7,7 @@ class ConfigEvaluation
     public bool $bool_value;
     public $json_value;
     public string $rule_id;
-    public bool $fetch_from_server;
+    public bool $unsupported;
     public array $secondary_exposures;
     public array $undelegated_secondary_exposures;
     public string $allocated_experiment;
@@ -19,7 +19,7 @@ class ConfigEvaluation
         string $rule_id = "",
         $json_value = [],
         array $secondary_exposures = [],
-        bool $fetch_from_server = false,
+        bool $unsupported = false,
         string $allocated_experiment = "",
         array $explicit_parameters = [],
         bool $is_experiment_group = false)
@@ -29,7 +29,7 @@ class ConfigEvaluation
         $this->json_value = $json_value;
         $this->secondary_exposures = $secondary_exposures;
         $this->undelegated_secondary_exposures = $secondary_exposures;
-        $this->fetch_from_server = $fetch_from_server;
+        $this->unsupported = $unsupported;
         $this->allocated_experiment = $allocated_experiment;
         $this->explicit_parameters = $explicit_parameters;
         $this->is_experiment_group = $is_experiment_group;

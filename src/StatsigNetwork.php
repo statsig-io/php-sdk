@@ -21,40 +21,43 @@ function guidv4($data = null)
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
 
+namespace Statsig;
+
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
+
 class StatsigNetwork
 {
     private string $key;
     private string $session_id;
+    private array $guzzle_options;
+    private Client $client;
 
     function __construct()
     {
         $this->session_id = guidv4();
+        $this->guzzle_options = [];
+        
     }
 
-    function setSdkKey($key)
+    function setOptions(array $options)
+    {
+        $this->guzzle_options = $options;
+    }
+
+    function setSdkKey(string $key)
     {
         $this->key = $key;
-    }
-
-    function checkGate(StatsigUser $user, string $gate)
-    {
-        $req_body = [
-            'user' => $user->toLogDictionary(),
-            'gateName' => $gate,
-            'statsigMetadata' => StatsigMetadata::getJson()
-        ];
-
-        return $this->postRequest("check_gate", json_encode($req_body));
-    }
-
-    function getConfig(StatsigUser $user, string $config)
-    {
-        $req_body = [
-            'user' => $user->toLogDictionary(),
-            'configName' => $config,
-            'statsigMetadata' => StatsigMetadata::getJson()
-        ];
-        return $this->postRequest("get_config", json_encode($req_body));
+        $this->client = new Client([
+          'base_uri' => 'https://statsigapi.net/v1/',
+          'headers' => [
+              'STATSIG-API-KEY' => $this->key,
+              'STATSIG-SERVER-SESSION-ID' => $this->session_id,
+              'STATSIG-SDK-TYPE' => StatsigMetadata::SDK_TYPE,
+              'STATSIG-SDK-VERSION' => StatsigMetadata::VERSION,
+              'Content-Type' => 'application/json'
+          ]
+      ]);
     }
 
     function logEvents($events)
@@ -66,30 +69,17 @@ class StatsigNetwork
         return $this->postRequest("rgstr", json_encode($req_body));
     }
 
-    function postRequest($endpoint, $input)
+
+    function postRequest(string $endpoint, string $input)
     {
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => "https://statsigapi.net/v1/{$endpoint}",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => $input,
-            CURLOPT_HTTPHEADER => array(
-                "STATSIG-API-KEY: {$this->key}",
-                "STATSIG-SERVER-SESSION-ID: {$this->session_id}",
-                "STATSIG-SDK-TYPE: " . StatsigMetadata::SDK_TYPE,
-                "STATSIG-SDK-VERSION: " . StatsigMetadata::VERSION,
-                'Content-Type: application/json'
-            ),
-        ));
-        $response = curl_exec($curl);
-        curl_close($curl);
-        return json_decode($response, true, 512, JSON_BIGINT_AS_STRING);
+        $response = $this->client->post($endpoint, [
+            RequestOptions::BODY => $input,
+            RequestOptions::HTTP_ERRORS => false,
+        ] + $this->guzzle_options); 
+
+        $body = $response->getBody()->getContents();
+        
+        return json_decode($body, true, 512, JSON_BIGINT_AS_STRING);
     }
 
     function multiGetRequest($requests): array
