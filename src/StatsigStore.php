@@ -87,6 +87,11 @@ class StatsigStore
         return IDList::getIDListFromAdapter($this->data_adapter, $id_list_name);
     }
 
+    function getAppIDFromKey(string $client_sdk_key): ?string
+    {
+        return $this->specs->sdk_keys_to_app_ids[$client_sdk_key] ?? null;
+    }
+
     function ensureSpecFreshness(): void
     {
         $current_time = floor(microtime(true) * 1000);

@@ -120,9 +120,9 @@ class StatsigServer
         return $this->error_boundary->swallow($task);
     }
 
-    function getClientInitializeResponse(StatsigUser $user)
+    function getClientInitializeResponse(StatsigUser $user, ?string $client_sdk_key = null)
     {
-        return $this->evaluator->getClientInitializeResponse($user);
+        return $this->evaluator->getClientInitializeResponse($user, $client_sdk_key);
     }
 
     function flush()
