@@ -402,7 +402,7 @@ class Evaluator
         }
     }
 
-    function getClientInitializeResponse(StatsigUser $user)
+    function getClientInitializeResponse(StatsigUser $user, ?string $client_sdk_key = null)
     {
         $this->store->ensureSpecFreshness();
         $this->store->ensureIDListsFreshness();
@@ -412,6 +412,6 @@ class Evaluator
         }
         return (new ClientInitializeResponse($user, $this->store, function ($user, $config) {
             return $this->eval($user, $config);
-        }))->getFormattedResponse();
+        }, $client_sdk_key))->getFormattedResponse();
     }
 }

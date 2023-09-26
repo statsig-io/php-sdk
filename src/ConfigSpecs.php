@@ -13,6 +13,7 @@ class ConfigSpecs
     public array $configs = [];
     public array $layers = [];
     public array $experiment_to_layer;
+    public array $sdk_keys_to_app_ids = [];
 
     public static function sync(IDataAdapter $adapter, StatsigNetwork $network): ?ConfigSpecs
     {
@@ -25,7 +26,8 @@ class ConfigSpecs
                 "gates" => $specs->gates,
                 "configs" => $specs->configs,
                 "layers" => $specs->layers,
-                "experiment_to_layer" => $specs->experiment_to_layer
+                "experiment_to_layer" => $specs->experiment_to_layer,
+                "sdk_keys_to_app_ids" => $specs->sdk_keys_to_app_ids
             ]);
             $adapter->set(self::RULESETS_KEY, $json);
         }
@@ -46,6 +48,7 @@ class ConfigSpecs
         $result->layers = $json["layers"] ?? [];
         $result->experiment_to_layer = $json["experiment_to_layer"] ?? [];
         $result->fetch_time = $json["fetch_time"] ?? 0;
+        $result->sdk_keys_to_app_ids = $json["sdk_keys_to_app_ids"] ?? [];
         return $result;
     }
 
@@ -79,12 +82,18 @@ class ConfigSpecs
             }
         }
 
+        $parsed_sdk_keys_to_app_ids = [];
+        if (isset($json["sdk_keys_to_app_ids"])) {
+            $parsed_sdk_keys_to_app_ids = $json["sdk_keys_to_app_ids"];
+        }
+
         $result = new ConfigSpecs();
         $result->gates = $parsed_gates;
         $result->configs = $parsed_configs;
         $result->layers = $parsed_layers;
         $result->experiment_to_layer = $parsed_experiment_to_layer;
         $result->fetch_time = floor(microtime(true) * 1000);
+        $result->sdk_keys_to_app_ids = $parsed_sdk_keys_to_app_ids;
         return $result;
     }
 }

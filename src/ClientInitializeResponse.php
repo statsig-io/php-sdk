@@ -7,12 +7,14 @@ class ClientInitializeResponse
     private StatsigUser $user;
     private StatsigStore $store;
     private \Closure $eval_func;
+    private ?string $client_sdk_key;
 
-    function __construct(StatsigUser $user, StatsigStore $store, callable $eval_func)
+    function __construct(StatsigUser $user, StatsigStore $store, callable $eval_func, ?string $client_sdk_key)
     {
         $this->user = $user;
         $this->store = $store;
         $this->eval_func = \Closure::fromCallable($eval_func);
+        $this->client_sdk_key = $client_sdk_key;
     }
 
     private function getEvalResult($config_spec): ConfigEvaluation
@@ -114,23 +116,36 @@ class ClientInitializeResponse
 
     function getFormattedResponse()
     {
+        $target_app_id = null;
+        if ($this->client_sdk_key !== null) {
+            $target_app_id = $this->store->getAppIDFromKey($this->client_sdk_key);
+        }
+
         $feature_gates = [];
         foreach ($this->store->getAllGates() as $name => $spec) {
             $entity_type = strtolower($spec["entity"]);
-            if ($entity_type !== "segment" && $entity_type !== "holdout") {
+            $target_app_ids = $spec["targetAppIDs"] ?? [];
+            if ($entity_type !== "segment" && $entity_type !== "holdout" 
+                && ($target_app_id === null || in_array($target_app_id, $target_app_ids))) {
                 list($hashed_name, $res) = $this->gateToResponse($name, $spec);
                 $feature_gates[$hashed_name] = $res;
             }
         }
         $dynamic_configs = [];
         foreach ($this->store->getAllConfigs() as $name => $spec) {
-            list($hashed_name, $res) = $this->configToResponse($name, $spec);
-            $dynamic_configs[$hashed_name] = $res;
+            $target_app_ids = $spec["targetAppIDs"] ?? [];
+            if ($target_app_id === null || in_array($target_app_id, $target_app_ids)) {
+                list($hashed_name, $res) = $this->configToResponse($name, $spec);
+                $dynamic_configs[$hashed_name] = $res;
+            }
         }
         $layer_configs = [];
         foreach ($this->store->getAllLayers() as $name => $spec) {
-            list($hashed_name, $res) = $this->layerToResponse($name, $spec);
-            $layer_configs[$hashed_name] = $res;
+            $target_app_ids = $spec["targetAppIDs"] ?? [];
+            if ($target_app_id === null || in_array($target_app_id, $target_app_ids)) {
+                list($hashed_name, $res) = $this->layerToResponse($name, $spec);
+                $layer_configs[$hashed_name] = $res;
+            }
         }
         $evaluated_keys = [];
         if ($this->user->getUserID()) {
