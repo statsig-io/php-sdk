@@ -25,6 +25,8 @@ namespace Statsig;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
+use GuzzleHttp\Pool;
+use GuzzleHttp\Psr7\Request;
 
 class StatsigNetwork
 {
@@ -36,7 +38,10 @@ class StatsigNetwork
     function __construct()
     {
         $this->session_id = guidv4();
-        $this->guzzle_options = [];
+        $this->guzzle_options = [
+          'timeout' => 30,
+          'connect_timeout' => 10,
+        ];
         
     }
 
@@ -82,51 +87,33 @@ class StatsigNetwork
         return json_decode($body, true, 512, JSON_BIGINT_AS_STRING);
     }
 
-    function multiGetRequest($requests): array
+    function multiGetRequest(array $requests): array
     {
-        $multi = curl_multi_init();
         $responses = [];
+        
+        $requestsPool = function () use ($requests) {
+          foreach ($requests as $key => $value) {
+              $request = new Request('GET', $value["url"], $value["headers"]);
+              yield $key => $request;
+          }
+      };
 
-        foreach ($requests as $key => $value) {
-            $curl = curl_init();
-            $responses[$key] = [
-                "headers" => [],
-                "curl" => $curl
-            ];
-            $headers = &$responses[$key]["headers"];
+      $pool = new Pool($this->client, $requestsPool(), [
+          'concurrency' => 5,
+          'fulfilled' => function ($response, $originalKey) use (&$responses) {
+              $contents = $response->getBody()->getContents();
+              $responses[$originalKey] = [
+                  "headers" => $response->getHeaders(),
+                  "data" => $contents
+              ];
+          },
+          'rejected' => function ($reason, $index) {
+              // No op - will retry to download from network next sync
+          },
+        ]);
 
-            curl_setopt_array($curl, [
-                CURLOPT_URL => $value["url"],
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_CONNECTTIMEOUT => 10,
-                CURLOPT_TIMEOUT => 60,
-                CURLOPT_HTTPHEADER => $value["headers"],
-                CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$headers) {
-                    $len = strlen($header);
-                    $header = explode(':', $header, 2);
-                    if (count($header) >= 2) {
-                        $headers[strtolower(trim($header[0]))][] = trim($header[1]);
-                    }
-                    return $len;
-                }
-            ]);
-            curl_multi_add_handle($multi, $curl);
-        }
-
-        $index = null;
-        do {
-            curl_multi_exec($multi, $index);
-        } while ($index > 0);
-
-        foreach ($responses as $key => $value) {
-            $content = curl_multi_getcontent($value["curl"]);
-            $responses[$key] = [
-                "headers" => $value["headers"],
-                "data" => $content
-            ];
-            curl_multi_remove_handle($multi, $curl);
-        }
+        // Wait for all requests to complete
+        $pool->promise()->wait();
 
         return $responses;
     }

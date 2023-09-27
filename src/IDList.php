@@ -67,11 +67,11 @@ class IDList
         }
 
         $responses = $network->multiGetRequest($requests);
-
+        
         foreach ($responses as $list_name => $res) {
             $list = $lists[$list_name];
 
-            $headers = $res["headers"];
+            $headers = array_change_key_case($res["headers"], CASE_LOWER);
             $content_len = intval($headers["content-length"][0]);
             if ($content_len <= 0) {
                 continue;
@@ -116,7 +116,7 @@ class IDList
         return new IDList($json["info"], $json["ids"]);
     }
 
-    static function  getLastIDListSyncTimeFromAdapter(IDataAdapter $adapter): int  {
+    static function getLastIDListSyncTimeFromAdapter(IDataAdapter $adapter): int  {
         return (int) $adapter->get(self::ID_LIST_LAST_SYNC_TIME_KEY);
     }
 

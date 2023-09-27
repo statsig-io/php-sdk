@@ -20,6 +20,7 @@ class E2ETest extends TestCase
     private Evaluator $evaluator;
     private array $cases;
     private string $key;
+    private StatsigNetwork $net;
 
     /**
      * @throws Exception when test_api_key is not set as an EnvironmentVariable
@@ -35,9 +36,13 @@ class E2ETest extends TestCase
         $this->key = $key;
         $out = null;
         exec("php sync.php --secret " . $key . " 2>&1", $out);
-
+        // To output any debug logs from the sync script, uncomment this
+        // foreach ($out as $line) {
+        //   echo $line . PHP_EOL;
+        // }
         $net = new StatsigNetwork();
         $net->setSDKKey($key);
+        $this->net = $net;
         $this->cases = $net->postRequest('rulesets_e2e_test', json_encode((object)[]));
     }
 
@@ -67,7 +72,7 @@ class E2ETest extends TestCase
         $config_adapter = new LocalFileDataAdapter();
         $logging_adapter = $include_logging_adapter ? new LocalFileLoggingAdapter("../../statsig.log") : null;
         $options = new StatsigOptions($config_adapter, $logging_adapter);
-        $store = new StatsigStore(new StatsigNetwork(), $options);
+        $store = new StatsigStore($this->net, $options);
         $this->evaluator = new Evaluator($store);
         $this->statsig = new StatsigServer($this->key, $options);
 
