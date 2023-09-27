@@ -28,7 +28,7 @@ class StatsigStore
     {
         $this->ensureSpecFreshness();
 
-        if (!array_key_exists($gate, $this->specs->gates)) {
+        if ($this->specs == null || !array_key_exists($gate, $this->specs->gates)) {
             return null;
         }
         return $this->specs->gates[$gate];
@@ -37,6 +37,10 @@ class StatsigStore
     function getAllGates()
     {
         $this->ensureSpecFreshness();
+        if ($this->specs == null) {
+            return [];
+        }
+
         return $this->specs->gates;
     }
 
@@ -44,15 +48,20 @@ class StatsigStore
     {
         $this->ensureSpecFreshness();
 
-        if (!array_key_exists($config, $this->specs->configs)) {
+        if ($this->specs == null ||!array_key_exists($config, $this->specs->configs)) {
             return null;
         }
+
         return $this->specs->configs[$config];
     }
 
     function getAllConfigs()
     {
         $this->ensureSpecFreshness();
+        if ($this->specs == null) {
+            return [];
+        }
+
         return $this->specs->configs;
     }
 
@@ -60,7 +69,7 @@ class StatsigStore
     {
         $this->ensureSpecFreshness();
 
-        if (!array_key_exists($layer, $this->specs->layers)) {
+        if ($this->specs == null ||!array_key_exists($layer, $this->specs->layers)) {
             return null;
         }
         return $this->specs->layers[$layer];
@@ -69,6 +78,10 @@ class StatsigStore
     function getAllLayers()
     {
         $this->ensureSpecFreshness();
+        if ($this->specs == null) {
+            return [];
+        }
+
         return $this->specs->layers;
     }
 
@@ -76,7 +89,7 @@ class StatsigStore
     {
         $this->ensureSpecFreshness();
 
-        if (!array_key_exists($experiment, $this->specs->experiment_to_layer)) {
+        if ($this->specs == null || !array_key_exists($experiment, $this->specs->experiment_to_layer)) {
             return null;
         }
         return $this->specs->experiment_to_layer[$experiment];
