@@ -11,14 +11,14 @@ use Statsig\EvaluationUtils as Utils;
 class Evaluator
 {
     private StatsigStore $store;
-    private Parser $ua_parser;
-    private IP3Country $ip3c;
+    private ?Parser $ua_parser;
+    private ?IP3Country $ip3c;
 
     function __construct(StatsigStore $store)
     {
         $this->store = $store;
-        $this->ua_parser = Parser::create();
-        $this->ip3c = new IP3Country();
+        $this->ua_parser = null;
+        $this->ip3c = = null;
     }
 
     function checkGate($user, $gate): ConfigEvaluation
@@ -370,6 +370,9 @@ class Evaluator
         if ($ip === null || $field != "country") {
             return null;
         }
+        if ($this->ip3c === null) {
+          $this->ip3c = new IP3Country();
+        }
         return $this->ip3c->lookup($ip);
     }
 
@@ -382,7 +385,9 @@ class Evaluator
         if (!is_string($ua) || strlen($ua) > 1000) {
             return null;
         }
-
+        if ($this->ua_parser === null) {
+          $this->ua_parser = Parser::create();
+        }
         $res = $this->ua_parser->parse($ua);
         switch (strtolower($field)) {
             case 'os_name':
