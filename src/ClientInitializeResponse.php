@@ -164,6 +164,7 @@ class ClientInitializeResponse
             "generator" => "statsig-php-sdk",
             "evaluated_keys" => $evaluated_keys,
             "time" => 0,
+            "user_hash" => $this->user->toHashWithoutStableID(),
         );
         return $response;
     }
