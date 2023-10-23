@@ -3,6 +3,7 @@
 namespace Statsig;
 
 use Statsig\Exceptions\StatsigUserException;
+use Statsig\HashingUtils;
 
 class StatsigUser
 {
@@ -130,6 +131,31 @@ class StatsigUser
         return array_filter($user, function ($v) {
             return $v !== null;
         });
+    }
+
+    function toHashWithoutStableID(): string
+    {
+        $user = [
+            "userID" => $this->user_id,
+            "email" => $this->email,
+            "ip" => $this->ip,
+            "userAgent" => $this->user_agent,
+            "country" => $this->country,
+            "locale" => $this->locale,
+            "appVersion" => $this->app_version,
+            "custom" => $this->custom,
+            "privateAttributes" => $this->private_attributes,
+            "statsigEnvironment" => $this->statsig_environment,
+        ];
+
+        $filtered_array = array_filter($user, function ($v) {
+            return $v !== null;
+        });
+
+        $custom_ids = $this->custom_ids;
+        unset($custom_ids["stableID"]);
+        $filtered_array["customIDs"] = $custom_ids;
+        return HashingUtils::hashArray($filtered_array);
     }
 
     /**
