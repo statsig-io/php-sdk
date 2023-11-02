@@ -102,6 +102,10 @@ class StatsigStore
 
     function getAppIDFromKey(string $client_sdk_key): ?string
     {
+        $target_app_id = $this->specs->hashed_sdk_keys_to_app_ids[HashingUtils::djb2($client_sdk_key)] ?? null;
+        if ($target_app_id != null) {
+            return $target_app_id;
+        }
         return $this->specs->sdk_keys_to_app_ids[$client_sdk_key] ?? null;
     }
 
