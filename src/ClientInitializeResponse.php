@@ -86,6 +86,12 @@ class ClientInitializeResponse
                 }
             }
         }
+
+        $value = $result['value'];
+        if (count($value) == 0) {
+            $result['value'] = (object)[];
+        }
+
         return array($hashed_name, $result);
     }
 
@@ -111,6 +117,12 @@ class ClientInitializeResponse
                 $result["explicit_parameters"] = $delegate_spec["explicitParameters"] ?? [];
             }
         }
+
+        $value = $result['value'];
+        if (count($value) == 0) {
+            $result['value'] = (object)[];
+        }
+
         return array($hashed_name, $result);
     }
 
@@ -159,7 +171,7 @@ class ClientInitializeResponse
             "feature_gates" => $feature_gates,
             "dynamic_configs" => $dynamic_configs,
             "layer_configs" => $layer_configs,
-            "sdkParams" => [],
+            "sdkParams" => (object)[],
             "has_updates" => true,
             "generator" => "statsig-php-sdk",
             "evaluated_keys" => $evaluated_keys,
