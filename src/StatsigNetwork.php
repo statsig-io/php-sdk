@@ -65,6 +65,11 @@ class StatsigNetwork
       ]);
     }
 
+    function getSDKKey(): string
+    {
+        return $this->key;
+    }
+
     function logEvents($events)
     {
         $req_body = [

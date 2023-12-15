@@ -10,6 +10,7 @@ class StatsigStore
     private StatsigOptions $options;
     private IDataAdapter $data_adapter;
     private ?ConfigSpecs $specs;
+    private EvalReason $eval_reason;
 
     function __construct(StatsigNetwork $network, StatsigOptions $options)
     {

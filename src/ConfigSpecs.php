@@ -19,7 +19,7 @@ class ConfigSpecs
     public static function sync(IDataAdapter $adapter, StatsigNetwork $network): ?ConfigSpecs
     {
         $json = $network->postRequest("download_config_specs", json_encode((object)[]));
-        $specs = ConfigSpecs::fromJson($json);
+        $specs = ConfigSpecs::fromJson($json, $network->getSDKKey());
 
         if ($specs !== null) {
             $json = json_encode([
@@ -55,11 +55,18 @@ class ConfigSpecs
         return $result;
     }
 
-    private static function fromJson(?array $json): ?ConfigSpecs
+    private static function fromJson(?array $json, string $server_secret): ?ConfigSpecs
     {
         if ($json == null) {
             return null;
         }
+        if (isset($json["hashed_sdk_key_used"])) {
+            $hashedSDKKeyUsed = $json["hashed_sdk_key_used"];
+            if ($hashedSDKKeyUsed !== null && $hashedSDKKeyUsed !== HashingUtils::djb2($server_secret)) {
+                return null;
+            }
+        }
+        
 
         $parsed_gates = [];
         for ($i = 0; $i < count($json["feature_gates"] ?? []); $i++) {
