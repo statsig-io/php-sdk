@@ -38,7 +38,7 @@ abstract class TestUtils
             }
 
             return $real_network->getSDKKey();
-        }
+        });
 
         $mock_network->shouldReceive('postRequest')
             ->andReturnUsing(function ($endpoint, $input) use ($on_request, $real_network, $mock_network) {
