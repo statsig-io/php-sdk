@@ -32,6 +32,13 @@ abstract class TestUtils
     {
         // @php-ignore
         $mock_network = \Mockery::mock('Statsig\StatsigNetwork', [])->makePartial();
+        $mock_network->shouldReceive('getSDKKey')->andReturnUsing(function () use ($real_network) {
+            if ($real_network == null) {
+                throw new Exception("Attempted to get SDK key");
+            }
+
+            return $real_network->getSDKKey();
+        });
 
         $mock_network->shouldReceive('postRequest')
             ->andReturnUsing(function ($endpoint, $input) use ($on_request, $real_network, $mock_network) {
