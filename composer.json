@@ -19,10 +19,10 @@
         "statsig/ip3country": "^0.1.0",
         "ext-json": "*",
         "ext-curl": "*",
-        "mockery/mockery": "^1.5",
         "guzzlehttp/guzzle": "^7.0"
     },
     "require-dev": {
+        "mockery/mockery": "^1.5",
         "phpunit/phpunit": "^9.3"
     },
     "support": {
