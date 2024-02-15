@@ -65,7 +65,7 @@ class StatsigServer
                 $res->rule_id,
                 $res->secondary_exposures,
             );
-            return new DynamicConfig($config, $res->json_value, $res->rule_id);
+            return new DynamicConfig($config, $res->json_value, $res->rule_id, $res->secondary_exposures, $res->group_name);
         };
         $fallback = function () use ($config) {
             return new DynamicConfig($config);
@@ -101,7 +101,7 @@ class StatsigServer
                     $res,
                 );
             };
-            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn);
+            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn, $res->group_name);
         };
         $fallback = function () use ($layer) {
             return new Layer($layer);

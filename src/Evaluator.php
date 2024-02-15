@@ -76,6 +76,7 @@ class Evaluator
                     "",
                     [],
                     $rule_result->is_experiment_group,
+                    $rule_result->group_name,
                 );
             }
         }
@@ -125,6 +126,7 @@ class Evaluator
             $result->secondary_exposures = array_merge($result->secondary_exposures, $condition_result->secondary_exposures);
         }
         $result->is_experiment_group = $rule["isExperimentGroup"] ?? false;
+        $result->group_name = $rule["groupName"] ?? null;
         return $result;
     }
 

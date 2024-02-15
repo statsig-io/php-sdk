@@ -8,12 +8,14 @@ class DynamicConfig
     private array $value;
     private string $rule_id;
     private array $secondary_exposures;
+    private ?string $group_name;
 
-    function __construct(string $name, array $value = [], string $rule_id = "", array $secondary_exposures = [])
+    function __construct(string $name, array $value = [], string $rule_id = "", array $secondary_exposures = [], ?string $group_name = null)
     {
         $this->name = $name;
         $this->rule_id = $rule_id;
         $this->secondary_exposures = $secondary_exposures;
+        $this->group_name = $group_name;
 
         // We re-decode here to treat associative arrays as objects, this allows us
         // to differentiate between array ([1,2]) and object (['a' => 'b'])
@@ -50,5 +52,10 @@ class DynamicConfig
     function getSecondaryExposures(): array
     {
         return $this->secondary_exposures;
+    }
+
+    function getGroupName(): ?string
+    {
+        return $this->group_name;
     }
 }
