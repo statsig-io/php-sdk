@@ -8,13 +8,15 @@ class Layer
     private array $value;
     private string $rule_id;
     private \Closure $exposure_log_fn;
+    private ?string $group_name;
 
-    function __construct(string $name, array $value = [], string $rule_id = "", ?callable $exposure_log_fn = null)
+    function __construct(string $name, array $value = [], string $rule_id = "", ?callable $exposure_log_fn = null, ?string $group_name = null)
     {
         $this->name = $name;
         $this->rule_id = $rule_id;
         $exposure_log_fn = $exposure_log_fn ?? function () {};
         $this->exposure_log_fn = \Closure::fromCallable($exposure_log_fn);
+        $this->group_name = $group_name;
 
         // We re-decode here to treat associative arrays as objects, this allows us
         // to differentiate between array ([1,2]) and object (['a' => 'b'])
@@ -64,5 +66,10 @@ class Layer
     function logParameterExposure($parameter): void
     {
         ($this->exposure_log_fn)($parameter);
+    }
+
+    function getGroupName(): ?string
+    {
+        return $this->group_name;
     }
 }

@@ -13,6 +13,7 @@ class ConfigEvaluation
     public string $allocated_experiment;
     public array $explicit_parameters;
     public bool $is_experiment_group;
+    public ?string $group_name;
 
     function __construct(
         bool $bool_value, 
@@ -22,7 +23,8 @@ class ConfigEvaluation
         bool $unsupported = false,
         string $allocated_experiment = "",
         array $explicit_parameters = [],
-        bool $is_experiment_group = false)
+        bool $is_experiment_group = false,
+        ?string $group_name = null)
     {
         $this->bool_value = $bool_value;
         $this->rule_id = $rule_id;
@@ -33,5 +35,6 @@ class ConfigEvaluation
         $this->allocated_experiment = $allocated_experiment;
         $this->explicit_parameters = $explicit_parameters;
         $this->is_experiment_group = $is_experiment_group;
+        $this->group_name = $group_name;
     }
 }
