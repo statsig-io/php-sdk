@@ -3,6 +3,7 @@
 namespace Statsig;
 
 use Statsig\Exceptions\InvalidSDKKeyException;
+use Statsig\Logger\ILogger;
 
 class StatsigServer
 {

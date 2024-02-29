@@ -5,7 +5,10 @@ namespace Statsig;
 use Statsig\Adapters\IDataAdapter;
 use Statsig\Adapters\ILoggingAdapter;
 use Statsig\Exceptions\EventQueueSizeException;
+use Statsig\OutputLoggers\IOutputLogger;
+
 use Exception;
+use Statsig\OutputLoggers\StatsigOutputLogger;
 
 class StatsigOptions
 {
@@ -20,11 +23,13 @@ class StatsigOptions
     private int $event_queue_size = 500;
     private IDataAdapter $data_adapter;
     private ?ILoggingAdapter $logging_adapter;
+    private IOutputLogger $output_logger;
 
-    function __construct(IDataAdapter $data_adapter, ?ILoggingAdapter $logging_adapter = null)
+    function __construct(IDataAdapter $data_adapter, ?ILoggingAdapter $logging_adapter = null, ?IOutputLogger $output_logger = null)
     {
         $this->data_adapter = $data_adapter;
         $this->logging_adapter = $logging_adapter;
+        $this->output_logger = $output_logger ?? new StatsigOutputLogger();
     }
 
     function getDataAdapter(): IDataAdapter
@@ -35,6 +40,11 @@ class StatsigOptions
     function getLoggingAdapter(): ?ILoggingAdapter
     {
         return $this->logging_adapter;
+    }
+
+    function getOutputLogger(): IOutputLogger
+    {
+        return $this->output_logger;
     }
 
     function setEnvironmentTier(?string $tier)
