@@ -31,9 +31,9 @@ class LayerExposuresTest extends TestCase
 
     protected function tearDown(): void
     {
-        if (file_exists(__DIR__ . "/testdata.log")) {
-            unlink(__DIR__ . "/testdata.log");
-        }
+        // if (file_exists(__DIR__ . "/testdata.log")) {
+        //     unlink(__DIR__ . "/testdata.log");
+        // }
     }
 
     public function testDoesNotLogOnGetLayer()

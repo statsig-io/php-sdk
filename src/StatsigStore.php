@@ -3,20 +3,25 @@
 namespace Statsig;
 
 use Statsig\Adapters\IDataAdapter;
+use Statsig\OutputLoggers\IOutputLogger;
+
+const NO_DOWNLOAD_COFNIGSPEC_ERR_MESSAGE = "[Statsig]: Cannot load config specs. Falling back to default values";
+const CONFIG_SPEC_STALE = "[Statsig]: Using stale config spec";
+const IDLIST_STALE = "[Statsig]: Using stale ID List ";
 
 class StatsigStore
 {
-    private StatsigNetwork $network;
     private StatsigOptions $options;
     private IDataAdapter $data_adapter;
     private ?ConfigSpecs $specs;
+    private IOutputLogger $output_logger;
 
-    function __construct(StatsigNetwork $network, StatsigOptions $options)
+    function __construct(StatsigOptions $options)
     {
-        $this->network = $network;
         $this->options = $options;
         $this->data_adapter = $options->getDataAdapter();
         $this->specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
+        $this->output_logger = $options->getOutputLogger();
     }
 
     function isReadyForChecks()
@@ -117,12 +122,16 @@ class StatsigStore
         }
 
         $adapter_specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
-        if ($adapter_specs != null && ($current_time - $adapter_specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
-            $this->specs = $adapter_specs;
+        if($adapter_specs == null) {
+            $this->output_logger->error(NO_DOWNLOAD_COFNIGSPEC_ERR_MESSAGE);
             return;
         }
-
-        $this->specs = ConfigSpecs::sync($this->data_adapter, $this->network);
+        $this->specs = $adapter_specs;
+        if ($adapter_specs != null && ($current_time - $adapter_specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
+            return;
+        } else {
+            $this->output_logger->warning(CONFIG_SPEC_STALE);
+        }
     }
 
     function ensureIDListsFreshness(): void
@@ -132,7 +141,6 @@ class StatsigStore
         if (($current_time - $last_fetch_time) <= $this->options->config_freshness_threshold_ms) {
             return;
         }
-
-        IDList::sync($this->data_adapter, $this->network);
+        $this->output_logger->warning(IDLIST_STALE);
     }
 }

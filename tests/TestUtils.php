@@ -18,7 +18,6 @@ abstract class TestUtils
 
         self::setPrivatePropOnInstance('network', $mock_network, $server);
         self::setPrivatePropOnInstance('network', $mock_network, $logger);
-        self::setPrivatePropOnInstance('network', $mock_network, $store);
     }
 
     /**

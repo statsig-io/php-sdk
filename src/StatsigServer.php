@@ -24,7 +24,7 @@ class StatsigServer
         $this->network = new StatsigNetwork();
         $this->network->setSdkKey($sdk_key);
 
-        $this->store = new StatsigStore($this->network, $options);
+        $this->store = new StatsigStore($options);
         $this->evaluator = new Evaluator($this->store);
         $this->logger = new StatsigLogger($options, $this->network);
         $this->options = $options;

@@ -11,9 +11,9 @@ use Statsig\OutputLoggers\IOutputLogger;
 class StatsigOutputLogger implements IOutputLogger 
 {
   public function warning(string $message) {
-    error_log("Error: ".$message);
+    error_log("Warning: ".$message);
   }
   public function error(string $message) {
-    error_log("Warning: ".$message);
+    error_log("Error: ".$message);
   }
 }

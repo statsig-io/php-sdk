@@ -20,7 +20,6 @@ class E2ETest extends TestCase
     private Evaluator $evaluator;
     private array $cases;
     private string $key;
-    private StatsigNetwork $net;
 
     /**
      * @throws Exception when test_api_key is not set as an EnvironmentVariable
@@ -72,7 +71,7 @@ class E2ETest extends TestCase
         $config_adapter = new LocalFileDataAdapter();
         $logging_adapter = $include_logging_adapter ? new LocalFileLoggingAdapter("../../statsig.log") : null;
         $options = new StatsigOptions($config_adapter, $logging_adapter);
-        $store = new StatsigStore($this->net, $options);
+        $store = new StatsigStore($options);
         $this->evaluator = new Evaluator($store);
         $this->statsig = new StatsigServer($this->key, $options);
 
@@ -90,8 +89,8 @@ class E2ETest extends TestCase
                 if (array_key_exists("userID", $user)) {
                     try {
                         $statsig_user = StatsigUser::withUserID($user["userID"]);
-
-                    } catch (Exception $e) {}
+                    } catch (Exception $e) {
+                    }
                 }
 
                 if (array_key_exists("customIDs", $user)) {
