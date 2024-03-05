@@ -14,10 +14,10 @@ abstract class TestUtils
         $mock_network = self::getMockNetwork($on_request, $crash_on_real_call ? null : $real_network);
 
         $logger = self::getPrivatePropOnInstance("logger", $server);
-        $store = self::getPrivatePropOnInstance("store", $server);
 
         self::setPrivatePropOnInstance('network', $mock_network, $server);
         self::setPrivatePropOnInstance('network', $mock_network, $logger);
+        return $mock_network;
     }
 
     /**

@@ -33,10 +33,10 @@ class ConfigSpecSetupTest extends TestCase
     $this->statsig->checkGate($this->statsigUser, "always_on_gate");
     $this->statsig->getConfig($this->statsigUser, "test_config");
     $this->statsig->getExperiment($this->statsigUser, "test_config");
-    $this->assertEquals(0,count($this->output_logger->warning_messages));
-    $this->assertEquals(4,count($this->output_logger->error_messages));
+    $this->assertEquals(0, count($this->output_logger->warning_messages));
+    $this->assertEquals(4, count($this->output_logger->error_messages));
     for ($i = 0; $i < 4; ++$i) {
-      $this->assertEquals($this->output_logger->error_messages[$i], "[Statsig]: Cannot load config specs. Falling back to default values");
+      $this->assertEquals("[Statsig]: Cannot load config specs, falling back to default values: Check if sync.php run successfully", $this->output_logger->error_messages[$i]);
     }
   }
 
@@ -50,7 +50,7 @@ class ConfigSpecSetupTest extends TestCase
     $this->assertEquals(0, count($this->output_logger->error_messages));
     $this->assertEquals(4, count($this->output_logger->warning_messages));
     for ($i = 0; $i < 4; ++$i) {
-      $this->assertEquals($this->output_logger->warning_messages[$i], "[Statsig]: Using stale config spec");
+      $this->assertStringMatchesFormat('[Statsig]: Config spec is possibly not up-to-date: last time polling config specs is UTC %s', $this->output_logger->warning_messages[$i]);
     }
   }
 

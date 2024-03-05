@@ -5,6 +5,7 @@ namespace Statsig\Test;
 use PHPUnit\Framework\TestCase;
 use Statsig\Adapters\LocalFileDataAdapter;
 use Statsig\Adapters\LocalFileLoggingAdapter;
+use Statsig\ConfigSpecs;
 use Statsig\StatsigServer;
 use Statsig\StatsigUser;
 use Statsig\StatsigOptions;
@@ -24,16 +25,17 @@ class LayerExposuresTest extends TestCase
         $this->user = StatsigUser::withUserID("123");
 
         $contents = json_decode(file_get_contents(__DIR__ . "/layer_exposures_download_config_specs.json"), true, 512, JSON_BIGINT_AS_STRING);
-        TestUtils::mockNetworkOnStatsigInstance($this->statsig, function ($method, $endpoint, $input) use ($contents) {
+        $network = TestUtils::mockNetworkOnStatsigInstance($this->statsig, function ($method, $endpoint, $input) use ($contents) {
             return $endpoint == "download_config_specs" ? $contents : null;
         });
+        ConfigSpecs::sync($config_adapter, $network);
     }
 
     protected function tearDown(): void
     {
-        // if (file_exists(__DIR__ . "/testdata.log")) {
-        //     unlink(__DIR__ . "/testdata.log");
-        // }
+        if (file_exists(__DIR__ . "/testdata.log")) {
+            unlink(__DIR__ . "/testdata.log");
+        }
     }
 
     public function testDoesNotLogOnGetLayer()
@@ -60,7 +62,7 @@ class LayerExposuresTest extends TestCase
             $layer = $this->statsig->getLayer($this->user, "unallocated_layer");
             call_user_func_array(array($layer, $method), array("an_int", 0));
             $this->statsig->flush();
-
+            
             $this->assertEventsFlushed(1 + $index);
         }
     }

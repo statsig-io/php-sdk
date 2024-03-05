@@ -5,9 +5,9 @@ namespace Statsig;
 use Statsig\Adapters\IDataAdapter;
 use Statsig\OutputLoggers\IOutputLogger;
 
-const NO_DOWNLOAD_COFNIGSPEC_ERR_MESSAGE = "[Statsig]: Cannot load config specs. Falling back to default values";
-const CONFIG_SPEC_STALE = "[Statsig]: Using stale config spec";
-const IDLIST_STALE = "[Statsig]: Using stale ID List ";
+const NO_DOWNLOADED_COFNIG_SPEC_ERR_MESSAGE = "[Statsig]: Cannot load config specs, falling back to default values: Check if sync.php run successfully";
+const CONFIG_SPEC_STALE = "[Statsig]: Config spec is possibly not up-to-date: last time polling config specs is UTC ";
+const IDLIST_STALE = "[Statsig]: IDList is possibly not up-to-date: last time polling idlist is UTC ";
 
 class StatsigStore
 {
@@ -53,7 +53,7 @@ class StatsigStore
     {
         $this->ensureSpecFreshness();
 
-        if ($this->specs == null ||!array_key_exists($config, $this->specs->configs)) {
+        if ($this->specs == null || !array_key_exists($config, $this->specs->configs)) {
             return null;
         }
 
@@ -74,7 +74,7 @@ class StatsigStore
     {
         $this->ensureSpecFreshness();
 
-        if ($this->specs == null ||!array_key_exists($layer, $this->specs->layers)) {
+        if ($this->specs == null || !array_key_exists($layer, $this->specs->layers)) {
             return null;
         }
         return $this->specs->layers[$layer];
@@ -122,15 +122,16 @@ class StatsigStore
         }
 
         $adapter_specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
-        if($adapter_specs == null) {
-            $this->output_logger->error(NO_DOWNLOAD_COFNIGSPEC_ERR_MESSAGE);
+        if ($adapter_specs == null) {
+            $this->output_logger->error(NO_DOWNLOADED_COFNIG_SPEC_ERR_MESSAGE);
             return;
         }
         $this->specs = $adapter_specs;
         if ($adapter_specs != null && ($current_time - $adapter_specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
             return;
         } else {
-            $this->output_logger->warning(CONFIG_SPEC_STALE);
+            $formatted_fetch_time = date("Y-m-d H:i:s", floor($this->specs->fetch_time / 1000));
+            $this->output_logger->warning(CONFIG_SPEC_STALE . $formatted_fetch_time);
         }
     }
 
@@ -141,6 +142,7 @@ class StatsigStore
         if (($current_time - $last_fetch_time) <= $this->options->config_freshness_threshold_ms) {
             return;
         }
-        $this->output_logger->warning(IDLIST_STALE);
+        $formatted_fetch_time = date("Y-m-d H:i:s", floor($last_fetch_time / 1000));
+        $this->output_logger->warning(IDLIST_STALE . $formatted_fetch_time);
     }
 }
