@@ -3,21 +3,25 @@
 namespace Statsig;
 
 use Statsig\Adapters\IDataAdapter;
+use Statsig\OutputLoggers\IOutputLogger;
+
+const NO_DOWNLOADED_COFNIG_SPEC_ERR_MESSAGE = "[Statsig]: Cannot load config specs, falling back to default values: Check if sync.php run successfully";
+const CONFIG_SPEC_STALE = "[Statsig]: Config spec is possibly not up-to-date: last time polling config specs is UTC ";
+const IDLIST_STALE = "[Statsig]: IDList is possibly not up-to-date: last time polling idlist is UTC ";
 
 class StatsigStore
 {
-    private StatsigNetwork $network;
     private StatsigOptions $options;
     private IDataAdapter $data_adapter;
     private ?ConfigSpecs $specs;
-    private EvalReason $eval_reason;
+    private IOutputLogger $output_logger;
 
-    function __construct(StatsigNetwork $network, StatsigOptions $options)
+    function __construct(StatsigOptions $options)
     {
-        $this->network = $network;
         $this->options = $options;
         $this->data_adapter = $options->getDataAdapter();
         $this->specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
+        $this->output_logger = $options->getOutputLogger();
     }
 
     function isReadyForChecks()
@@ -49,7 +53,7 @@ class StatsigStore
     {
         $this->ensureSpecFreshness();
 
-        if ($this->specs == null ||!array_key_exists($config, $this->specs->configs)) {
+        if ($this->specs == null || !array_key_exists($config, $this->specs->configs)) {
             return null;
         }
 
@@ -70,7 +74,7 @@ class StatsigStore
     {
         $this->ensureSpecFreshness();
 
-        if ($this->specs == null ||!array_key_exists($layer, $this->specs->layers)) {
+        if ($this->specs == null || !array_key_exists($layer, $this->specs->layers)) {
             return null;
         }
         return $this->specs->layers[$layer];
@@ -118,12 +122,17 @@ class StatsigStore
         }
 
         $adapter_specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
-        if ($adapter_specs != null && ($current_time - $adapter_specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
-            $this->specs = $adapter_specs;
+        if ($adapter_specs == null) {
+            $this->output_logger->error(NO_DOWNLOADED_COFNIG_SPEC_ERR_MESSAGE);
             return;
         }
-
-        $this->specs = ConfigSpecs::sync($this->data_adapter, $this->network);
+        $this->specs = $adapter_specs;
+        if ($adapter_specs != null && ($current_time - $adapter_specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
+            return;
+        } else {
+            $formatted_fetch_time = date("Y-m-d H:i:s", floor($this->specs->fetch_time / 1000));
+            $this->output_logger->warning(CONFIG_SPEC_STALE . $formatted_fetch_time);
+        }
     }
 
     function ensureIDListsFreshness(): void
@@ -133,7 +142,7 @@ class StatsigStore
         if (($current_time - $last_fetch_time) <= $this->options->config_freshness_threshold_ms) {
             return;
         }
-
-        IDList::sync($this->data_adapter, $this->network);
+        $formatted_fetch_time = date("Y-m-d H:i:s", floor($last_fetch_time / 1000));
+        $this->output_logger->warning(IDLIST_STALE . $formatted_fetch_time);
     }
 }
