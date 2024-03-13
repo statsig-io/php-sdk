@@ -102,7 +102,7 @@ class StatsigServer
                     $res,
                 );
             };
-            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn, $res->group_name);
+            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn, $res->group_name, $res->allocated_experiment == "" ? null : $res->allocated_experiment);
         };
         $fallback = function () use ($layer) {
             return new Layer($layer);
