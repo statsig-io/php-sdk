@@ -10,8 +10,9 @@ class Layer
     private \Closure $exposure_log_fn;
     private ?string $group_name;
     private ?string $allocated_experiment_name;
+    private ?string $id_type;
 
-    function __construct(string $name, array $value = [], string $rule_id = "", ?callable $exposure_log_fn = null, ?string $group_name = null, ?string $allocated_experiment_name = null)
+    function __construct(string $name, array $value = [], string $rule_id = "", ?callable $exposure_log_fn = null, ?string $group_name = null, ?string $allocated_experiment_name = null, ?string $id_type = null)
     {
         $this->name = $name;
         $this->rule_id = $rule_id;
@@ -19,6 +20,7 @@ class Layer
         $this->exposure_log_fn = \Closure::fromCallable($exposure_log_fn);
         $this->group_name = $group_name;
         $this->allocated_experiment_name = $allocated_experiment_name;
+        $this->id_type = $id_type;
 
         // We re-decode here to treat associative arrays as objects, this allows us
         // to differentiate between array ([1,2]) and object (['a' => 'b'])
@@ -78,5 +80,10 @@ class Layer
     function getAllocatedExperimentName(): ?string
     {
         return $this->allocated_experiment_name;
+    }
+
+    function getIDType(): ?string
+    {
+        return $this->id_type;
     }
 }

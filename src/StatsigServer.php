@@ -55,6 +55,26 @@ class StatsigServer
         return $this->error_boundary->capture($task, $fallback);
     }
 
+    function getFeatureGate(StatsigUser $user, string $gate): FeatureGate
+    {
+        $task = function () use ($user, $gate) {
+            $user = $this->normalizeUser($user);
+            $res = $this->evaluator->checkGate($user, $gate);
+            $this->logger->logGateExposure(
+                $user,
+                $gate,
+                $res->bool_value,
+                $res->rule_id,
+                $res->secondary_exposures,
+            );
+            return new FeatureGate($gate, $res->bool_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type);
+        };
+        $fallback = function () {
+            return new FeatureGate($gate);
+        };
+        return $this->error_boundary->capture($task, $fallback);
+    }
+
     function getConfig(StatsigUser $user, string $config): DynamicConfig
     {
         $task = function () use ($user, $config) {
@@ -66,7 +86,7 @@ class StatsigServer
                 $res->rule_id,
                 $res->secondary_exposures,
             );
-            return new DynamicConfig($config, $res->json_value, $res->rule_id, $res->secondary_exposures, $res->group_name);
+            return new DynamicConfig($config, $res->json_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type);
         };
         $fallback = function () use ($config) {
             return new DynamicConfig($config);
@@ -102,7 +122,7 @@ class StatsigServer
                     $res,
                 );
             };
-            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn, $res->group_name, $res->allocated_experiment == "" ? null : $res->allocated_experiment);
+            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn, $res->group_name, $res->allocated_experiment == "" ? null : $res->allocated_experiment, $res->id_type);
         };
         $fallback = function () use ($layer) {
             return new Layer($layer);
