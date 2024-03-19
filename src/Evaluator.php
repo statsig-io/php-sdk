@@ -50,8 +50,9 @@ class Evaluator
 
     function eval($user, $config): ConfigEvaluation
     {
+        $id_type = array_key_exists("idType", $config) ? $config["idType"] : null;
         if (!$config["enabled"]) {
-            return new ConfigEvaluation(false, "disabled", $config["defaultValue"]);
+            return new ConfigEvaluation(false, "disabled", $config["defaultValue"], [], false, "", [], false, null, $id_type);
         }
         $secondary_exposures = [];
         for ($i = 0; $i < count($config["rules"]); $i++) {
@@ -77,10 +78,11 @@ class Evaluator
                     [],
                     $rule_result->is_experiment_group,
                     $rule_result->group_name,
+                    $id_type,
                 );
             }
         }
-        return new ConfigEvaluation(false, "default", $config["defaultValue"], $secondary_exposures);
+        return new ConfigEvaluation(false, "default", $config["defaultValue"], $secondary_exposures, false, "", [], false, null, $id_type);
     }
 
     function evalDelegate($user, $rule, $exposures): ?ConfigEvaluation

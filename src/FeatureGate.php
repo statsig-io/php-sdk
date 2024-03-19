@@ -2,38 +2,23 @@
 
 namespace Statsig;
 
-class DynamicConfig
+class FeatureGate
 {
     private string $name;
-    private array $value;
+    private bool $value;
     private string $rule_id;
     private array $secondary_exposures;
     private ?string $group_name;
     private ?string $id_type;
 
-    function __construct(string $name, array $value = [], string $rule_id = "", array $secondary_exposures = [], ?string $group_name = null, ?string $id_type = null)
+    function __construct(string $name, bool $value = false, string $rule_id = "", array $secondary_exposures = [], ?string $group_name = null, ?string $id_type = null)
     {
         $this->name = $name;
         $this->rule_id = $rule_id;
         $this->secondary_exposures = $secondary_exposures;
         $this->group_name = $group_name;
         $this->id_type = $id_type;
-
-        // We re-decode here to treat associative arrays as objects, this allows us
-        // to differentiate between array ([1,2]) and object (['a' => 'b'])
-        $this->value = (array) json_decode(json_encode($value), null, 512, JSON_BIGINT_AS_STRING);
-    }
-
-    function get(string $field, $default)
-    {
-        if (!array_key_exists($field, $this->value)) {
-            return $default;
-        }
-        $val = $this->value[$field];
-        if ($default !== null && gettype($val) !== gettype($default)) {
-            return $default;
-        }
-        return $val;
+        $this->value = $value;
     }
 
     function getName(): string
@@ -41,7 +26,7 @@ class DynamicConfig
         return $this->name;
     }
 
-    function getValue(): array
+    function getValue(): bool
     {
         return $this->value;
     }
