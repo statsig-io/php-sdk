@@ -19,14 +19,14 @@ class ErrorBoundary
         $this->client = new \GuzzleHttp\Client();
     }
 
-    function capture(callable $task, callable $recover, ...$args)
+    function capture(callable $task, callable $recover, string $tag = '', $extra = [])
     {
         try {
-            return $task(...$args);
+            return $task();
         } catch (StatsigBaseException $e) {
             throw $e;
         } catch (Exception $e) {
-            $this->logException($e);
+            $this->logException($e, $tag, $extra);
             return $recover();
         }
     }
@@ -38,7 +38,7 @@ class ErrorBoundary
         $this->capture($task, $empty_recover);
     }
 
-    function logException(Exception $e)
+    function logException(Exception $e, string $tag = '', array $extra = [])
     {
         try {
             $name = $e->__toString();
@@ -46,11 +46,12 @@ class ErrorBoundary
                 return;
             }
             array_push($this->seen, $name);
-            $body = [
+            $body = array_merge([
                 'exception' => $name,
                 'info' => $e->getTraceAsString(),
-                'statsigMetadata' => StatsigMetadata::getJson()
-            ];
+                'statsigMetadata' => StatsigMetadata::getJson(),
+                'tag' => $tag
+            ], $extra);
             $this->client->request('POST', ErrorBoundary::ENDPOINT, [
                 'max' => 10,
                 'protocols' => ['https'],

@@ -29,6 +29,11 @@ class StatsigStore
         return $this->specs !== null && $this->specs->fetch_time !== 0;
     }
 
+    function getTime()
+    {
+        return $this->specs->time;
+    }
+
     function getGateDefinition(string $gate)
     {
         $this->ensureSpecFreshness();

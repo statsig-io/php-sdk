@@ -8,13 +8,15 @@ class ClientInitializeResponse
     private StatsigStore $store;
     private \Closure $eval_func;
     private ?string $client_sdk_key;
+    private ?string $hash;
 
-    function __construct(StatsigUser $user, StatsigStore $store, callable $eval_func, ?string $client_sdk_key)
+    function __construct(StatsigUser $user, StatsigStore $store, callable $eval_func, ?string $client_sdk_key, ?string $hash)
     {
         $this->user = $user;
         $this->store = $store;
         $this->eval_func = \Closure::fromCallable($eval_func);
         $this->client_sdk_key = $client_sdk_key;
+        $this->hash = $hash;
     }
 
     private function getEvalResult($config_spec): ConfigEvaluation
@@ -24,6 +26,12 @@ class ClientInitializeResponse
 
     private function hashName(string $name)
     {
+        if ($this-> hash == "none") {
+            return $name;
+        }
+        if ($this->hash == "djb2") {
+            return HashingUtils::djb2($name);
+        }
         return base64_encode(hash("sha256", $name, true));
     }
 
@@ -128,6 +136,9 @@ class ClientInitializeResponse
 
     function getFormattedResponse()
     {
+        if ($this->store->getTime() == 0) {
+            return [];
+        }
         $target_app_id = null;
         if ($this->client_sdk_key !== null) {
             $target_app_id = $this->store->getAppIDFromKey($this->client_sdk_key);
@@ -175,8 +186,13 @@ class ClientInitializeResponse
             "has_updates" => true,
             "generator" => "statsig-php-sdk",
             "evaluated_keys" => $evaluated_keys,
-            "time" => 0,
-            "user_hash" => $this->user->toHashWithoutStableID(),
+            "time" => $this->store->getTime(),
+            "user" => $this->user->toEvaluationDictionary(),
+            "hash_used" => $this->hash ?? 'sha256',
+            "sdkInfo" => (object)[
+                "sdkType" => StatsigMetadata::SDK_TYPE,
+                "sdkVersion" => StatsigMetadata::VERSION,
+            ],
         );
         return $response;
     }
