@@ -9,6 +9,7 @@ class ConfigSpecs
     private const RULESETS_KEY = "statsig.cache";
 
     public int $fetch_time;
+    public int $time;
     public array $gates = [];
     public array $configs = [];
     public array $layers = [];
@@ -24,6 +25,7 @@ class ConfigSpecs
         if ($specs !== null) {
             $json = json_encode([
                 "fetch_time" => $specs->fetch_time,
+                "time" => $specs->time,
                 "gates" => $specs->gates,
                 "configs" => $specs->configs,
                 "layers" => $specs->layers,
@@ -52,6 +54,7 @@ class ConfigSpecs
         $result->fetch_time = $json["fetch_time"] ?? 0;
         $result->sdk_keys_to_app_ids = $json["sdk_keys_to_app_ids"] ?? [];
         $result->hashed_sdk_keys_to_app_ids = $json["hashed_sdk_keys_to_app_ids"] ?? [];
+        $result->time = $json["time"] ?? 0;
         return $result;
     }
 
@@ -110,6 +113,7 @@ class ConfigSpecs
         $result->fetch_time = floor(microtime(true) * 1000);
         $result->sdk_keys_to_app_ids = $parsed_sdk_keys_to_app_ids;
         $result->hashed_sdk_keys_to_app_ids = $parsed_hashed_sdk_keys_to_app_ids;
+        $result->time = $json["time"] ?? 0;
         return $result;
     }
 }
