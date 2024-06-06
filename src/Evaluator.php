@@ -72,7 +72,7 @@ class Evaluator
                     $pass === true,
                     $rule["id"],
                     $pass === true ? $rule["returnValue"] : $config["defaultValue"],
-                    $secondary_exposures,
+                    $this->cleanExposures($secondary_exposures),
                     false,
                     "",
                     [],
@@ -82,7 +82,7 @@ class Evaluator
                 );
             }
         }
-        return new ConfigEvaluation(false, "default", $config["defaultValue"], $secondary_exposures, false, "", [], false, null, $id_type);
+        return new ConfigEvaluation(false, "default", $config["defaultValue"], $this->cleanExposures($secondary_exposures), false, "", [], false, null, $id_type);
     }
 
     function evalDelegate($user, $rule, $exposures): ?ConfigEvaluation
@@ -98,8 +98,8 @@ class Evaluator
         $delegate_result = $this->eval($user, $config);
         $delegate_result->explicit_parameters = $config["explicitParameters"] ?? [];
         $delegate_result->allocated_experiment = $config_delegate;
-        $delegate_result->secondary_exposures = array_merge($exposures, $delegate_result->secondary_exposures);
-        $delegate_result->undelegated_secondary_exposures = $exposures;
+        $delegate_result->secondary_exposures = $this->cleanExposures(array_merge($exposures, $delegate_result->secondary_exposures));
+        $delegate_result->undelegated_secondary_exposures = $this->cleanExposures($exposures);
         return $delegate_result;
     }
 
@@ -409,6 +409,21 @@ class Evaluator
             default:
                 return null;
         }
+    }
+
+    function cleanExposures($exposures)
+    {
+        $cleaned = [];
+        $seen = [];
+        for ($i = 0; $i < count($exposures); $i++) {
+            $exposure = $exposures[$i];
+            $key = sprintf("%s|%s|%s", $exposure["gate"], $exposure["gateValue"], $exposure["ruleID"]);
+            if (!Utils::stringStartsWith($exposure["gate"], "segment:") && !array_key_exists($key, $seen)) {
+                $cleaned[] = $exposure;
+                $seen[$key] = true;
+            }
+        }
+        return $cleaned;
     }
 
     function getClientInitializeResponse(StatsigUser $user, ?string $client_sdk_key = null, ?string $hash = null)

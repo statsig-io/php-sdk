@@ -35,27 +35,13 @@ class ClientInitializeResponse
         return base64_encode(hash("sha256", $name, true));
     }
 
-    private function cleanExposures(array $exposures)
-    {
-        $seen = [];
-        $result = [];
-        foreach ($exposures as $exposure) {
-            $key = sprintf("%s|%s|%s", $exposure["gate"], $exposure["gateValue"], $exposure["ruleID"]);
-            if (!array_key_exists($key, $seen)) {
-                $seen[$key] = true;
-                array_push($result, $exposure);
-            }
-        }
-        return $result;
-    }
-
     private function evalResultToBaseResponse(string $name, ConfigEvaluation $eval_result)
     {
         $hashed_name = $this->hashName($name);
         $base_response = array(
             "name" => $hashed_name,
             "rule_id" => $eval_result->rule_id,
-            "secondary_exposures" => $this->cleanExposures($eval_result->secondary_exposures),
+            "secondary_exposures" => $eval_result->secondary_exposures,
         );
         return array($hashed_name, $base_response);
     }
@@ -111,7 +97,7 @@ class ClientInitializeResponse
             "value" => $eval_result->json_value,
             "group" => $eval_result->rule_id,
             "is_device_based" => strtolower($config_spec["idType"] ?? "") === "stableid",
-            "undelegated_secondary_exposures" => $this->cleanExposures($eval_result->undelegated_secondary_exposures),
+            "undelegated_secondary_exposures" => $eval_result->undelegated_secondary_exposures,
             "explicit_parameters" => $config_spec["explicitParameters"] ?? [],
         ));
         $delegate = $eval_result->allocated_experiment;
