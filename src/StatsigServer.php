@@ -69,7 +69,7 @@ class StatsigServer
             );
             return new FeatureGate($gate, $res->bool_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type);
         };
-        $fallback = function () {
+        $fallback = function () use ($gate) {
             return new FeatureGate($gate);
         };
         return $this->error_boundary->capture($task, $fallback);
