@@ -25,7 +25,7 @@ class Evaluator
     {
         $def = $this->store->getGateDefinition($gate);
         if ($def === null) {
-            return new ConfigEvaluation(false, "");
+            return new ConfigEvaluation(false, $this->store->getEvaluationDetails(EvaluationReason::$UNRECOGNIZED),  "");
         }
         return $this->eval($user, $def);
     }
@@ -34,7 +34,7 @@ class Evaluator
     {
         $def = $this->store->getConfigDefinition($config);
         if ($def === null) {
-            return new ConfigEvaluation(false, "");
+            return new ConfigEvaluation(false, $this->store->getEvaluationDetails(EvaluationReason::$UNRECOGNIZED), "");
         }
         return $this->eval($user, $def);
     }
@@ -43,7 +43,7 @@ class Evaluator
     {
         $def = $this->store->getLayerDefinition($layer);
         if ($def === null) {
-            return new ConfigEvaluation(false, "");
+            return new ConfigEvaluation(false, $this->store->getEvaluationDetails(EvaluationReason::$UNRECOGNIZED), "");
         }
         return $this->eval($user, $def);
     }
@@ -52,7 +52,7 @@ class Evaluator
     {
         $id_type = array_key_exists("idType", $config) ? $config["idType"] : null;
         if (!$config["enabled"]) {
-            return new ConfigEvaluation(false, "disabled", $config["defaultValue"], [], false, "", [], false, null, $id_type);
+            return new ConfigEvaluation(false, $this->store->getEvaluationDetails(), "disabled", $config["defaultValue"], [], false, "", [], false, null, $id_type);
         }
         $secondary_exposures = [];
         for ($i = 0; $i < count($config["rules"]); $i++) {
@@ -70,6 +70,7 @@ class Evaluator
                 $pass = Utils::evalPassPercentage($user->toEvaluationDictionary(), $rule, $config);
                 return new ConfigEvaluation(
                     $pass === true,
+                    $this->store->getEvaluationDetails(),
                     $rule["id"],
                     $pass === true ? $rule["returnValue"] : $config["defaultValue"],
                     $this->cleanExposures($secondary_exposures),
@@ -82,7 +83,7 @@ class Evaluator
                 );
             }
         }
-        return new ConfigEvaluation(false, "default", $config["defaultValue"], $this->cleanExposures($secondary_exposures), false, "", [], false, null, $id_type);
+        return new ConfigEvaluation(false, $this->store->getEvaluationDetails(), "default", $config["defaultValue"], $this->cleanExposures($secondary_exposures), false, "", [], false, null, $id_type);
     }
 
     function evalDelegate($user, $rule, $exposures): ?ConfigEvaluation
@@ -115,7 +116,7 @@ class Evaluator
             }
             $condition_results[] = $condition_result;
         }
-        $result = new ConfigEvaluation(true, $rule["id"], $rule["returnValue"], $secondary_exposures);
+        $result = new ConfigEvaluation(true, $this->store->getEvaluationDetails(), $rule["id"], $rule["returnValue"], $secondary_exposures);
 
         for ($i = 0; $i < count($condition_results); $i++) {
             $condition_result = $condition_results[$i];
@@ -143,7 +144,7 @@ class Evaluator
 
         switch (strtolower($type)) {
             case 'public':
-                return new ConfigEvaluation(true, "");
+                return new ConfigEvaluation(true);
             case 'fail_gate':
             case 'pass_gate':
                 $nested = $this->checkGate($user_obj, $target);
@@ -156,7 +157,7 @@ class Evaluator
                     "gateValue" => $nested->bool_value ? "true" : "false",
                     "ruleID" => $nested->rule_id,
                 ];
-                return new ConfigEvaluation($result, "", $nested->json_value, $all_exposures, $nested->unsupported);
+                return new ConfigEvaluation($result, $nested->evaluation_details, "", $nested->json_value, $all_exposures, $nested->unsupported);
             case 'ip_based':
                 $value = Utils::getFromUser($user, $field) ?? $this->getFromIP($user, $field);
                 break;
@@ -185,7 +186,7 @@ class Evaluator
                 $value = Utils::getUnitID($user, $idType);
                 break;
             default:
-                return new ConfigEvaluation(false, "", [], [], true);
+                return new ConfigEvaluation(false, $this->store->getEvaluationDetails(EvaluationReason::$UNSUPPORTED), "", [], [], true);
         }
 
 
@@ -363,7 +364,7 @@ class Evaluator
                 }
                 return new ConfigEvaluation($operator == "in_segment_list" ? $is_in_list : !$is_in_list);
             default:
-                return new ConfigEvaluation(false, "", [], [], true);
+                return new ConfigEvaluation(false, $this->store->getEvaluationDetails(EvaluationReason::$UNSUPPORTED),  "", [], [], true);
         }
     }
 
