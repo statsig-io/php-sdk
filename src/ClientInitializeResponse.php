@@ -35,13 +35,26 @@ class ClientInitializeResponse
         return base64_encode(hash("sha256", $name, true));
     }
 
+    private function hashExposures(array $exposures)
+    {
+        $hashed_exposures = [];
+        foreach ($exposures as $exposure) {
+            $hashed_exposures[] = array(
+                "gate" => $this->hashName($exposure["gate"]),
+                "gateValue" => $exposure["gateValue"],
+                "ruleID" => $exposure["ruleID"],
+            );
+        }
+        return $hashed_exposures;
+    }
+
     private function evalResultToBaseResponse(string $name, ConfigEvaluation $eval_result)
     {
         $hashed_name = $this->hashName($name);
         $base_response = array(
             "name" => $hashed_name,
             "rule_id" => $eval_result->rule_id,
-            "secondary_exposures" => $eval_result->secondary_exposures,
+            "secondary_exposures" => $this->hashExposures($eval_result->secondary_exposures),
         );
         return array($hashed_name, $base_response);
     }
@@ -97,7 +110,7 @@ class ClientInitializeResponse
             "value" => $eval_result->json_value,
             "group" => $eval_result->rule_id,
             "is_device_based" => strtolower($config_spec["idType"] ?? "") === "stableid",
-            "undelegated_secondary_exposures" => $eval_result->undelegated_secondary_exposures,
+            "undelegated_secondary_exposures" => $this->hashExposures($eval_result->undelegated_secondary_exposures),
             "explicit_parameters" => $config_spec["explicitParameters"] ?? [],
         ));
         $delegate = $eval_result->allocated_experiment;
