@@ -15,9 +15,11 @@ class ConfigEvaluation
     public bool $is_experiment_group;
     public ?string $group_name;
     public ?string $id_type;
+    public ?EvaluationDetails $evaluation_details;
 
     function __construct(
         bool $bool_value, 
+        ?EvaluationDetails $evaluation_details = null,
         string $rule_id = "",
         $json_value = [],
         array $secondary_exposures = [],
@@ -39,5 +41,6 @@ class ConfigEvaluation
         $this->is_experiment_group = $is_experiment_group;
         $this->group_name = $group_name;
         $this->id_type = $id_type;
+        $this->evaluation_details = $evaluation_details;
     }
 }

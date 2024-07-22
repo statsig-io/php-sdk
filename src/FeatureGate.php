@@ -10,8 +10,9 @@ class FeatureGate
     private array $secondary_exposures;
     private ?string $group_name;
     private ?string $id_type;
+    private ?EvaluationDetails $evaluation_details;
 
-    function __construct(string $name, bool $value = false, string $rule_id = "", array $secondary_exposures = [], ?string $group_name = null, ?string $id_type = null)
+    function __construct(string $name, bool $value = false, string $rule_id = "", array $secondary_exposures = [], ?string $group_name = null, ?string $id_type = null, ?EvaluationDetails $evaluation_details = null)
     {
         $this->name = $name;
         $this->rule_id = $rule_id;
@@ -19,6 +20,7 @@ class FeatureGate
         $this->group_name = $group_name;
         $this->id_type = $id_type;
         $this->value = $value;
+        $this->evaluation_details = $evaluation_details;
     }
 
     function getName(): string
@@ -49,5 +51,10 @@ class FeatureGate
     function getIDType(): ?string
     {
         return $this->id_type;
+    }
+    
+    function getEvaluationDetails(): ?EvaluationDetails
+    {
+        return $this->evaluation_details;
     }
 }

@@ -15,6 +15,8 @@ class StatsigStore
     private IDataAdapter $data_adapter;
     private ?ConfigSpecs $specs;
     private IOutputLogger $output_logger;
+    private int $initial_update_time;
+    private int $last_update_time;
 
     function __construct(StatsigOptions $options)
     {
@@ -22,6 +24,12 @@ class StatsigStore
         $this->data_adapter = $options->getDataAdapter();
         $this->specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
         $this->output_logger = $options->getOutputLogger();
+        $this->initial_update_time = 0;
+        $this->last_update_time =  0;
+        if ($this->specs != null) {
+            $this->initial_update_time = $this->specs->time;
+            $this->last_update_time = $this->specs->time;
+        }
     }
 
     function isReadyForChecks()
@@ -73,6 +81,16 @@ class StatsigStore
         }
 
         return $this->specs->configs;
+    }
+
+    function getEvaluationDetails(?string $reason = null): EvaluationDetails {
+        if ($this->initial_update_time == 0 && $this->last_update_time == 0) {
+            return new EvaluationDetails(EvaluationReason::$UNINITIALIZED, $this->initial_update_time, $this->last_update_time);
+        }
+        if ($reason == null) {
+            $reason = EvaluationReason::$DATA_ADAPTER;
+        }
+        return new EvaluationDetails($reason, $this->initial_update_time, $this->last_update_time);
     }
 
     function getLayerDefinition(string $layer)
@@ -131,6 +149,10 @@ class StatsigStore
             $this->output_logger->error(NO_DOWNLOADED_COFNIG_SPEC_ERR_MESSAGE);
             return;
         }
+        if ($this->initial_update_time == 0) {
+            $this->initial_update_time = $adapter_specs->time;
+        }
+        $this->last_update_time = $adapter_specs->time;
         $this->specs = $adapter_specs;
         if ($adapter_specs != null && ($current_time - $adapter_specs->fetch_time) <= $this->options->config_freshness_threshold_ms) {
             return;

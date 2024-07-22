@@ -10,14 +10,16 @@ class DynamicConfig
     private array $secondary_exposures;
     private ?string $group_name;
     private ?string $id_type;
+    private ?EvaluationDetails $evaluation_details;
 
-    function __construct(string $name, array $value = [], string $rule_id = "", array $secondary_exposures = [], ?string $group_name = null, ?string $id_type = null)
+    function __construct(string $name, array $value = [], string $rule_id = "", array $secondary_exposures = [], ?string $group_name = null, ?string $id_type = null, ?EvaluationDetails $evaluation_details = null)
     {
         $this->name = $name;
         $this->rule_id = $rule_id;
         $this->secondary_exposures = $secondary_exposures;
         $this->group_name = $group_name;
         $this->id_type = $id_type;
+        $this->evaluation_details = $evaluation_details;
 
         // We re-decode here to treat associative arrays as objects, this allows us
         // to differentiate between array ([1,2]) and object (['a' => 'b'])
@@ -64,5 +66,10 @@ class DynamicConfig
     function getIDType(): ?string
     {
         return $this->id_type;
+    }
+
+    function getEvaluationDetails(): ?EvaluationDetails
+    {
+        return $this->evaluation_details;
     }
 }

@@ -23,7 +23,7 @@ class StatsigLogger
         $this->enqueue($event->toJson());
     }
 
-    function logGateExposure(StatsigUser $user, string $gate, bool $bool_value, string $rule_id, array $secondary_exposures)
+    function logGateExposure(StatsigUser $user, string $gate, bool $bool_value, string $rule_id, array $secondary_exposures, ?EvaluationDetails $evaluation_details = null)
     {
         $exposure = new StatsigEvent("statsig::gate_exposure");
         $exposure->setUser($user);
@@ -31,26 +31,34 @@ class StatsigLogger
             "gate" => $gate,
             "gateValue" => $bool_value ? "true" : "false",
             "ruleID" => $rule_id,
+            "reason" => $evaluation_details !== null ? $evaluation_details->reason : "",
+            "initTime" => $evaluation_details !== null ? $evaluation_details->initTime : 0,
+            "serverTime" => $evaluation_details !== null ? $evaluation_details->serverTime : 0,
+            "configSyncTime" => $evaluation_details !== null ? $evaluation_details->configSyncTime : 0,
         ]);
         $json = $exposure->toJson();
         $json->{"secondaryExposures"} = $secondary_exposures;
         $this->enqueue($json);
     }
 
-    function logConfigExposure(StatsigUser $user, string $config, string $rule_id, array $secondary_exposures)
+    function logConfigExposure(StatsigUser $user, string $config, string $rule_id, array $secondary_exposures, ?EvaluationDetails $evaluation_details = null)
     {
         $exposure = new StatsigEvent("statsig::config_exposure");
         $exposure->setUser($user);
         $exposure->setMetadata([
             "config" => $config,
             "ruleID" => $rule_id,
+            "reason" => $evaluation_details !== null ? $evaluation_details->reason : "",
+            "initTime" => $evaluation_details !== null ? $evaluation_details->initTime : 0,
+            "serverTime" => $evaluation_details !== null ? $evaluation_details->serverTime : 0,
+            "configSyncTime" => $evaluation_details !== null ? $evaluation_details->configSyncTime : 0,
         ]);
         $json = $exposure->toJson();
         $json->{"secondaryExposures"} = $secondary_exposures;
         $this->enqueue($json);
     }
 
-    function logLayerExposure(StatsigUser $user, string $layer, string $rule_id, string $parameter, ConfigEvaluation $evaluation)
+    function logLayerExposure(StatsigUser $user, string $layer, string $rule_id, string $parameter, ConfigEvaluation $evaluation, ?EvaluationDetails $evaluation_details = null)
     {
         $exposure = new StatsigEvent("statsig::layer_exposure");
         $exposure->setUser($user);
@@ -61,6 +69,10 @@ class StatsigLogger
             "allocatedExperiment" => $is_explicit ? $evaluation->allocated_experiment : "",
             "parameterName" => $parameter,
             "isExplicitParameter" => $is_explicit ? "true" : "false",
+            "reason" => $evaluation_details !== null ? $evaluation_details->reason : "",
+            "initTime" => $evaluation_details !== null ? $evaluation_details->initTime : 0,
+            "serverTime" => $evaluation_details !== null ? $evaluation_details->serverTime : 0,
+            "configSyncTime" => $evaluation_details !== null ? $evaluation_details->configSyncTime : 0,
         ]);
         $json = $exposure->toJson();
         $secondary_exposures = $evaluation->undelegated_secondary_exposures;

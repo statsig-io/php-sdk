@@ -46,6 +46,7 @@ class StatsigServer
                 $res->bool_value,
                 $res->rule_id,
                 $res->secondary_exposures,
+                $res->evaluation_details,
             );
             return $res->bool_value;
         };
@@ -66,8 +67,9 @@ class StatsigServer
                 $res->bool_value,
                 $res->rule_id,
                 $res->secondary_exposures,
+                $res->evaluation_details,
             );
-            return new FeatureGate($gate, $res->bool_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type);
+            return new FeatureGate($gate, $res->bool_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type, $res->evaluation_details);
         };
         $fallback = function () use ($gate) {
             return new FeatureGate($gate);
@@ -85,8 +87,9 @@ class StatsigServer
                 $config,
                 $res->rule_id,
                 $res->secondary_exposures,
+                $res->evaluation_details,
             );
-            return new DynamicConfig($config, $res->json_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type);
+            return new DynamicConfig($config, $res->json_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type, $res->evaluation_details);
         };
         $fallback = function () use ($config) {
             return new DynamicConfig($config);
@@ -120,9 +123,10 @@ class StatsigServer
                     $rule_id,
                     $parameter,
                     $res,
+                    $res->evaluation_details,
                 );
             };
-            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn, $res->group_name, $res->allocated_experiment == "" ? null : $res->allocated_experiment, $res->id_type);
+            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn, $res->group_name, $res->allocated_experiment == "" ? null : $res->allocated_experiment, $res->id_type, $res->evaluation_details);
         };
         $fallback = function () use ($layer) {
             return new Layer($layer);
