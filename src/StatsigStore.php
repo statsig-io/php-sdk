@@ -25,7 +25,11 @@ class StatsigStore
         $this->specs = ConfigSpecs::loadFromDataAdapter($this->data_adapter);
         $this->output_logger = $options->getOutputLogger();
         $this->initial_update_time = 0;
-        $this->last_update_time = 0;
+        $this->last_update_time =  0;
+        if ($this->specs != null) {
+            $this->initial_update_time = $this->specs->time;
+            $this->last_update_time = $this->specs->time;
+        }
     }
 
     function isReadyForChecks()
