@@ -76,15 +76,17 @@ class StatsigNetwork
             'events' => $events,
             'statsigMetadata' => StatsigMetadata::getJson()
         ];
-        return $this->postRequest("rgstr", json_encode($req_body));
+        return $this->postRequest("rgstr", json_encode($req_body), ['STATSIG-EVENT-COUNT' => strval(count($events))]);
     }
 
 
-    function postRequest(string $endpoint, string $input)
+    function postRequest(string $endpoint, string $input, array $extra_headers = [])
     {
+        
         $response = $this->client->post($endpoint, [
             RequestOptions::BODY => $input,
             RequestOptions::HTTP_ERRORS => false,
+            RequestOptions::HEADERS => $extra_headers,
         ] + $this->guzzle_options); 
 
         $body = $response->getBody()->getContents();
