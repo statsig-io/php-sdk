@@ -34,6 +34,7 @@ class StatsigNetwork
     private string $session_id;
     private array $guzzle_options;
     private Client $client;
+    public ErrorBoundary $error_boundary;
 
     function __construct()
     {
@@ -63,6 +64,12 @@ class StatsigNetwork
               'Content-Type' => 'application/json'
           ]
       ]);
+      $this->error_boundary = new ErrorBoundary($key);
+    }
+
+    function getErrorBoundary()
+    {
+        return $this->error_boundary;
     }
 
     function getSDKKey(): string
@@ -72,11 +79,25 @@ class StatsigNetwork
 
     function logEvents($events)
     {
+        $this->logEventsWithStatusCode($events)["body"];
+    }
+
+    function logEventsWithStatusCode($events)
+    {
         $req_body = [
             'events' => $events,
             'statsigMetadata' => StatsigMetadata::getJson()
         ];
-        return $this->postRequest("rgstr", json_encode($req_body), ['STATSIG-EVENT-COUNT' => strval(count($events))]);
+        $res = $this->postRequest("rgstr", json_encode($req_body), ['STATSIG-EVENT-COUNT' => strval(count($events))]);
+
+        if ($res["status_code"] >= 300) {
+            if ($this->getErrorBoundary() != null) {
+                $message = "Failed to post " . count($events) . " logs, dropping the request";
+                $this->getErrorBoundary()->logException(new \Exception('Failed to log events'), "statsig::log_event_failed", ["eventCount" => count($events), "error" => $message], true);
+            }
+        }
+
+        return $res;
     }
 
 
@@ -90,8 +111,9 @@ class StatsigNetwork
         ] + $this->guzzle_options); 
 
         $body = $response->getBody()->getContents();
+        $status_code = $response->getStatusCode();
         
-        return json_decode($body, true, 512, JSON_BIGINT_AS_STRING);
+        return ["body" => json_decode($body, true, 512, JSON_BIGINT_AS_STRING), "status_code" => $status_code];
     }
 
     function multiGetRequest(array $requests): array
