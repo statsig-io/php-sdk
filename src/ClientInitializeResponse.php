@@ -186,7 +186,7 @@ class ClientInitializeResponse
             "generator" => "statsig-php-sdk",
             "evaluated_keys" => $evaluated_keys,
             "time" => $this->store->getTime(),
-            "user" => $this->user->toEvaluationDictionary(),
+            "user" => $this->user->toLogDictionary(),
             "hash_used" => $this->hash ?? 'sha256',
             "sdkInfo" => (object)[
                 "sdkType" => StatsigMetadata::SDK_TYPE,
