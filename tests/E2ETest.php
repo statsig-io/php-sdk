@@ -76,7 +76,7 @@ class E2ETest extends TestCase
         $this->statsig = new StatsigServer($this->key, $options);
 
         TestUtils::mockNetworkOnStatsigInstance($this->statsig, function ($method, $endpoint, $input) {
-            return $endpoint == "rgstr" ? [] : null;
+            return $endpoint == "rgstr" ? ["body" => [], "status_code" => 200] : null;
         });
     }
 
