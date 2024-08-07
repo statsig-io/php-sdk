@@ -28,7 +28,7 @@ class IDList
 
     static function sync(IDataAdapter $adapter, StatsigNetwork $network): void
     {
-        $id_lists_lookup = $network->postRequest("get_id_lists", json_encode(['statsigMetadata' => StatsigMetadata::getJson()]))["body"];
+        $id_lists_lookup = $network->postRequest("get_id_lists", json_encode(['statsigMetadata' => StatsigMetadata::getJson()]));
         if ($id_lists_lookup === null) {
             return;
         }

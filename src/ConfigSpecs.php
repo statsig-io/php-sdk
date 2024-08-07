@@ -19,7 +19,7 @@ class ConfigSpecs
 
     public static function sync(IDataAdapter $adapter, StatsigNetwork $network): ?ConfigSpecs
     {
-        $json = $network->postRequest("download_config_specs", json_encode((object)[]))["body"];
+        $json = $network->postRequest("download_config_specs", json_encode((object)[]));
         $specs = ConfigSpecs::fromJson($json, $network->getSDKKey());
 
         if ($specs !== null) {

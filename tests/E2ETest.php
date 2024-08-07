@@ -42,7 +42,7 @@ class E2ETest extends TestCase
         $net = new StatsigNetwork();
         $net->setSDKKey($key);
         $this->net = $net;
-        $this->cases = $net->postRequest('rulesets_e2e_test', json_encode((object)[]))["body"];
+        $this->cases = $net->postRequest('rulesets_e2e_test', json_encode((object)[]));
     }
 
     protected function tearDown(): void

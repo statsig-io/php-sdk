@@ -88,7 +88,7 @@ class StatsigNetwork
             'events' => $events,
             'statsigMetadata' => StatsigMetadata::getJson()
         ];
-        $res = $this->postRequest("rgstr", json_encode($req_body), ['STATSIG-EVENT-COUNT' => strval(count($events))]);
+        $res = $this->postRequest("rgstr", json_encode($req_body), ['STATSIG-EVENT-COUNT' => strval(count($events))], true);
 
         if ($res["status_code"] >= 300) {
             if ($this->getErrorBoundary() != null) {
@@ -101,7 +101,7 @@ class StatsigNetwork
     }
 
 
-    function postRequest(string $endpoint, string $input, array $extra_headers = [])
+    function postRequest(string $endpoint, string $input, array $extra_headers = [], bool $with_status = false)
     {
         
         $response = $this->client->post($endpoint, [
@@ -112,6 +112,10 @@ class StatsigNetwork
 
         $body = $response->getBody()->getContents();
         $status_code = $response->getStatusCode();
+
+        if (!$with_status) {
+            return $body;
+        }
         
         return ["body" => json_decode($body, true, 512, JSON_BIGINT_AS_STRING), "status_code" => $status_code];
     }
