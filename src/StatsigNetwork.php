@@ -114,7 +114,7 @@ class StatsigNetwork
         $status_code = $response->getStatusCode();
 
         if (!$with_status) {
-            return $body;
+            return $json_decode($body, true, 512, JSON_BIGINT_AS_STRING);
         }
         
         return ["body" => json_decode($body, true, 512, JSON_BIGINT_AS_STRING), "status_code" => $status_code];
