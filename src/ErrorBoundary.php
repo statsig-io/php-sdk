@@ -7,7 +7,6 @@ use Exception;
 
 class ErrorBoundary
 {
-    const ENDPOINT = 'https://statsigapi.net/v1/sdk_exception';
     private string $api_key;
     private array $seen;
     private \GuzzleHttp\Client $client;
@@ -17,6 +16,11 @@ class ErrorBoundary
         $this->api_key = $api_key;
         $this->seen = [];
         $this->client = new \GuzzleHttp\Client();
+    }
+
+    function getEndpoint(): string
+    {
+        return 'https://statsigapi.net/v1/sdk_exception';
     }
 
     function capture(callable $task, callable $recover, string $tag = '', $extra = [])
@@ -38,11 +42,11 @@ class ErrorBoundary
         $this->capture($task, $empty_recover);
     }
 
-    function logException(Exception $e, string $tag = '', array $extra = [])
+    function logException(Exception $e, string $tag = '', array $extra = [], bool $force = false)
     {
         try {
             $name = $e->__toString();
-            if ($this->api_key === null || in_array($name, $this->seen)) {
+            if (!$force && ($this->api_key === null || in_array($name, $this->seen))) {
                 return;
             }
             array_push($this->seen, $name);
@@ -52,7 +56,7 @@ class ErrorBoundary
                 'statsigMetadata' => StatsigMetadata::getJson(),
                 'tag' => $tag
             ], $extra);
-            $this->client->request('POST', ErrorBoundary::ENDPOINT, [
+            $this->client->request('POST', $this->getEndpoint(), [
                 'max' => 10,
                 'protocols' => ['https'],
                 'timeout' => 20,
