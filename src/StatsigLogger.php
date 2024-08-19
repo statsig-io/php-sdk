@@ -23,11 +23,11 @@ class StatsigLogger
         $this->enqueue($event->toJson());
     }
 
-    function logGateExposure(StatsigUser $user, string $gate, bool $bool_value, string $rule_id, array $secondary_exposures, ?EvaluationDetails $evaluation_details = null)
+    function logGateExposure(StatsigUser $user, string $gate, bool $bool_value, string $rule_id, array $secondary_exposures, ?EvaluationDetails $evaluation_details = null, bool $is_manual = false)
     {
         $exposure = new StatsigEvent("statsig::gate_exposure");
         $exposure->setUser($user);
-        $exposure->setMetadata([
+        $metadata = [
             "gate" => $gate,
             "gateValue" => $bool_value ? "true" : "false",
             "ruleID" => $rule_id,
@@ -35,35 +35,43 @@ class StatsigLogger
             "initTime" => $evaluation_details !== null ? $evaluation_details->initTime : 0,
             "serverTime" => $evaluation_details !== null ? $evaluation_details->serverTime : 0,
             "configSyncTime" => $evaluation_details !== null ? $evaluation_details->configSyncTime : 0,
-        ]);
+        ];
+        if ($is_manual) {
+            $metadata["isManualExposure"] = "true";
+        }
+        $exposure->setMetadata($metadata);
         $json = $exposure->toJson();
         $json->{"secondaryExposures"} = $secondary_exposures;
         $this->enqueue($json);
     }
 
-    function logConfigExposure(StatsigUser $user, string $config, string $rule_id, array $secondary_exposures, ?EvaluationDetails $evaluation_details = null)
+    function logConfigExposure(StatsigUser $user, string $config, string $rule_id, array $secondary_exposures, ?EvaluationDetails $evaluation_details = null, bool $is_manual = false)
     {
         $exposure = new StatsigEvent("statsig::config_exposure");
         $exposure->setUser($user);
-        $exposure->setMetadata([
+        $metadata = [
             "config" => $config,
             "ruleID" => $rule_id,
             "reason" => $evaluation_details !== null ? $evaluation_details->reason : "",
             "initTime" => $evaluation_details !== null ? $evaluation_details->initTime : 0,
             "serverTime" => $evaluation_details !== null ? $evaluation_details->serverTime : 0,
             "configSyncTime" => $evaluation_details !== null ? $evaluation_details->configSyncTime : 0,
-        ]);
+        ];
+        if ($is_manual) {
+            $metadata["isManualExposure"] = "true";
+        }
+        $exposure->setMetadata($metadata);
         $json = $exposure->toJson();
         $json->{"secondaryExposures"} = $secondary_exposures;
         $this->enqueue($json);
     }
 
-    function logLayerExposure(StatsigUser $user, string $layer, string $rule_id, string $parameter, ConfigEvaluation $evaluation, ?EvaluationDetails $evaluation_details = null)
+    function logLayerExposure(StatsigUser $user, string $layer, string $rule_id, string $parameter, ConfigEvaluation $evaluation, ?EvaluationDetails $evaluation_details = null, bool $is_manual = false)
     {
         $exposure = new StatsigEvent("statsig::layer_exposure");
         $exposure->setUser($user);
         $is_explicit = in_array($parameter, $evaluation->explicit_parameters);
-        $exposure->setMetadata([
+        $metadata = [
             "config" => $layer,
             "ruleID" => $rule_id,
             "allocatedExperiment" => $is_explicit ? $evaluation->allocated_experiment : "",
@@ -73,7 +81,11 @@ class StatsigLogger
             "initTime" => $evaluation_details !== null ? $evaluation_details->initTime : 0,
             "serverTime" => $evaluation_details !== null ? $evaluation_details->serverTime : 0,
             "configSyncTime" => $evaluation_details !== null ? $evaluation_details->configSyncTime : 0,
-        ]);
+        ];
+        if ($is_manual) {
+            $metadata["isManualExposure"] = "true";
+        }
+        $exposure->setMetadata($metadata);
         $json = $exposure->toJson();
         $secondary_exposures = $evaluation->undelegated_secondary_exposures;
         $json->{"secondaryExposures"} = $secondary_exposures ?? [];

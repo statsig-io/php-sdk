@@ -56,6 +56,19 @@ class StatsigServer
         return $this->error_boundary->capture($task, $fallback);
     }
 
+    function checkGateWithExposureLoggingDisabled(StatsigUser $user, string $gate): bool
+    {
+        $task = function () use ($user, $gate) {
+            $user = $this->normalizeUser($user);
+            $res = $this->evaluator->checkGate($user, $gate);
+            return $res->bool_value;
+        };
+        $fallback = function () {
+            return false;
+        };
+        return $this->error_boundary->capture($task, $fallback);
+    }
+
     function getFeatureGate(StatsigUser $user, string $gate): FeatureGate
     {
         $task = function () use ($user, $gate) {
@@ -75,6 +88,40 @@ class StatsigServer
             return new FeatureGate($gate);
         };
         return $this->error_boundary->capture($task, $fallback);
+    }
+
+    function getFeatureGateWithExposureLoggingDisabled(Statsig $user, string $gate): FeatureGate
+    {
+        $task = function () use ($user, $gate) {
+            $user = $this->normalizeUser($user);
+            $res = $this->evaluator->checkGate($user, $gate);
+            return new FeatureGate($gate, $res->bool_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type, $res->evaluation_details);
+        };
+        $fallback = function () use ($gate) {
+            return new FeatureGate($gate);
+        };
+        return $this->error_boundary->capture($task, $fallback);
+    }
+
+    function manuallyLogGateExposure(StatsigUser $user, string $gate): void
+    {
+        $task = function () use ($user, $gate) {
+            $user = $this->normalizeUser($user);
+            $res = $this->evaluator->checkGate($user, $gate);
+            $this->logger->logGateExposure(
+                $user,
+                $gate,
+                $res->bool_value,
+                $res->rule_id,
+                $res->secondary_exposures,
+                $res->evaluation_details,
+                true,
+            );
+        };
+        $fallback = function () use ($gate) {
+            return;
+        };
+        $this->error_boundary->capture($task, $fallback);
     }
 
     function getConfig(StatsigUser $user, string $config): DynamicConfig
@@ -97,16 +144,52 @@ class StatsigServer
         return $this->error_boundary->capture($task, $fallback);
     }
 
-    function getExperiment(StatsigUser $user, string $experiment): DynamicConfig
+    function getConfigWithExposureLoggingDisabled(StatsigUser $user, string $config): DynamicConfig
     {
-        $task = function () use ($user, $experiment) {
+        $task = function () use ($user, $config) {
             $user = $this->normalizeUser($user);
-            return $this->getConfig($user, $experiment);
+            $res = $this->evaluator->getConfig($user, $config);
+            return new DynamicConfig($config, $res->json_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type, $res->evaluation_details);
         };
-        $fallback = function () use ($experiment) {
-            return new DynamicConfig($experiment);
+        $fallback = function () use ($config) {
+            return new DynamicConfig($config);
         };
         return $this->error_boundary->capture($task, $fallback);
+    }
+
+    function manuallyLogConfigExposure(StatsigUser $user, string $config): void
+    {
+        $task = function () use ($user, $config) {
+            $user = $this->normalizeUser($user);
+            $res = $this->evaluator->getConfig($user, $config);
+            $this->logger->logConfigExposure(
+                $user,
+                $config,
+                $res->rule_id,
+                $res->secondary_exposures,
+                $res->evaluation_details,
+                true,
+            );
+        };
+        $fallback = function () use ($config) {
+            return;
+        };
+        $this->error_boundary->capture($task, $fallback);
+    }
+
+    function getExperiment(StatsigUser $user, string $experiment): DynamicConfig
+    {
+        return $this->getConfig($user, $experiment);
+    }
+
+    function getExperimentWithExposureLoggingDisabled(StatsigUser $user, string $experiment): DynamicConfig
+    {
+        return $this->getConfigWithExposureLoggingDisabled($user, $experiment);
+    }
+
+    function manuallyLogExperimentExposure(StatsigUser $user, string $experiment): void
+    {
+        $this->manuallyLogConfigExposure($user, $experiment);
     }
 
     function getLayer(StatsigUser $user, string $layer): Layer
@@ -132,6 +215,47 @@ class StatsigServer
             return new Layer($layer);
         };
         return $this->error_boundary->capture($task, $fallback);
+    }
+
+    function getLayerWithExposureLoggingDisabled(StatsigUser $user, string $layer): Layer
+    {
+        $task = function () use ($user, $layer) {
+            $user = $this->normalizeUser($user);
+            $res = $this->evaluator->getLayer($user, $layer);
+            $json_value = $res->json_value;
+            $rule_id = $res->rule_id;
+            $log_exposure_fn = function ($parameter) use ($user, $layer, $rule_id, $res) {
+                return;
+            };
+            return new Layer($layer, $json_value, $rule_id, $log_exposure_fn, $res->group_name, $res->allocated_experiment == "" ? null : $res->allocated_experiment, $res->id_type, $res->evaluation_details);
+        };
+        $fallback = function () use ($layer) {
+            return new Layer($layer);
+        };
+        return $this->error_boundary->capture($task, $fallback);
+    }
+
+    function manuallyLogLayerParameterExposure(StatsigUser $user, string $layer, string $parameter): void  
+    {
+        $task = function () use ($user, $layer, $parameter) {
+            $user = $this->normalizeUser($user);
+            $res = $this->evaluator->getLayer($user, $layer);
+            $json_value = $res->json_value;
+            $rule_id = $res->rule_id;
+            $this->logger->logLayerExposure(
+                $user,
+                $layer,
+                $rule_id,
+                $parameter,
+                $res,
+                $res->evaluation_details,
+                true,
+            );
+        };
+        $fallback = function () use ($layer) {
+            return;
+        };
+        $this->error_boundary->capture($task, $fallback);
     }
 
     function logEvent(StatsigEvent $event)
