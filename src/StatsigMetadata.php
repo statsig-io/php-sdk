@@ -4,7 +4,7 @@ namespace Statsig;
 
 abstract class StatsigMetadata
 {
-    public const VERSION = "3.3.1";
+    public const VERSION = "3.4.0";
     public const SDK_TYPE = "php-server";
 
     public static function getJson(): array
