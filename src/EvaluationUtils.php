@@ -228,4 +228,30 @@ abstract class EvaluationUtils
         }
         return substr($haystack, -$length) === $needle;
     }
+
+    public static function arrayContainsAny($value, $target): bool
+    {
+        if (!is_iterable($target)) {
+            $target = [$target];
+        }
+        foreach ($target as $t) {
+            if (is_array($value) && (in_array($t, $value) || in_array(intval($t), $value))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static function arrayContainsAll($value, $target): bool
+    {
+        if (!is_iterable($target)) {
+            $target = [$target];
+        }
+        foreach ($target as $t) {
+            if (!in_array($t, $value) && !in_array(intval($t), $value)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
