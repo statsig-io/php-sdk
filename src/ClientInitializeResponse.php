@@ -78,6 +78,9 @@ class ClientInitializeResponse
             "group" => $eval_result->rule_id,
             "is_device_based" => strtolower($config_spec["idType"] ?? "") === "stableid",
         ));
+        if ($eval_result->group_name != null) {
+            $result["group_name"] = $eval_result->group_name;
+        }
         $entity_type = strtolower($config_spec["entity"] ?? "");
         if ($entity_type === "experiment") {
             $result["is_user_in_experiment"] = $eval_result->is_experiment_group;
@@ -122,6 +125,9 @@ class ClientInitializeResponse
                 $result["is_user_in_experiment"] = $delegate_result->is_experiment_group;
                 $result["is_experiment_active"] = $delegate_spec["isActive"] ?? false;
                 $result["explicit_parameters"] = $delegate_spec["explicitParameters"] ?? [];
+                if ($delegate_result->group_name != null) {
+                    $result["group_name"] = $delegate_result->group_name;
+                }
             }
         }
 
