@@ -353,6 +353,26 @@ class Evaluator
                 $a = date('Y-m-d', $value);
                 $b = date('Y-m-d', $target);
                 return new ConfigEvaluation($a == $b);
+            case 'array_contains_any':
+                if (!is_array($value)) {
+                    return new ConfigEvaluation(false);
+                }
+                return new ConfigEvaluation(Utils::arrayContainsAny($value, $target));
+            case 'array_contains_none':
+                if (!is_array($value)) {
+                    return new ConfigEvaluation(false);
+                }
+                return new ConfigEvaluation(!Utils::arrayContainsAny($value, $target));
+            case 'array_contains_all':
+                if (!is_array($value)) {
+                    return new ConfigEvaluation(false);
+                }
+                return new ConfigEvaluation(Utils::arrayContainsAll($value, $target));
+            case 'not_array_contains_all':
+                if (!is_array($value)) {
+                    return new ConfigEvaluation(false);
+                }
+                return new ConfigEvaluation(!Utils::arrayContainsAll($value, $target));
             case 'in_segment_list':
             case 'not_in_segment_list':
 
