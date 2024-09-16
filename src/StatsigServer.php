@@ -272,6 +272,7 @@ class StatsigServer
     function getClientInitializeResponse(StatsigUser $user, ?string $client_sdk_key = null, ?string $hash = null)
     {
         $task = function () use ($user, $client_sdk_key, $hash) {
+            $user = $this->normalizeUser($user);
             $res = $this->evaluator->getClientInitializeResponse($user, $client_sdk_key, $hash);
             if ($res === null || count($res) === 0) {
                 $this->error_boundary->logException(new \Exception('Failed to get initialize response'), 'getClientInitializeResponse', ['client_sdk_key' => $client_sdk_key, 'hash' => $hash]);
