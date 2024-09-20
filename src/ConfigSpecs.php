@@ -58,7 +58,7 @@ class ConfigSpecs
         return $result;
     }
 
-    private static function fromJson(?array $json, string $server_secret): ?ConfigSpecs
+    public static function fromJson(?array $json, string $server_secret): ?ConfigSpecs
     {
         if ($json == null) {
             return null;
