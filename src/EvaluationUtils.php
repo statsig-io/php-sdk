@@ -75,6 +75,12 @@ abstract class EvaluationUtils
 
     public static function evalPassPercentage($user, $rule, $config): bool
     {
+        $passPercentage = isset($rule["passPercentage"]) ? floatval($rule["passPercentage"]) : 0;
+        if ($passPercentage === 0.0) {
+            return false;
+        } elseif ($passPercentage === 100.0) {
+            return true;
+        }
         $id_type = array_key_exists("idType", $rule) ? $rule["idType"] : "";
         $unit_id = self::getUnitID($user, $id_type) ?? "";
         $salted_id = sprintf(
