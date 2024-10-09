@@ -65,6 +65,7 @@ class ClientInitializeResponse
         list($hashed_name, $base_response) = $this->evalResultToBaseResponse($gate_name, $eval_result);
         $result = array_merge($base_response, array(
             "value" => $eval_result->bool_value,
+            "id_type" => $config_spec["idType"],
         ));
         return array($hashed_name, $result);
     }
@@ -77,6 +78,7 @@ class ClientInitializeResponse
             "value" => $eval_result->json_value,
             "group" => $eval_result->rule_id,
             "is_device_based" => strtolower($config_spec["idType"] ?? "") === "stableid",
+            "id_type" => $config_spec["idType"],
         ));
         if ($eval_result->group_name != null) {
             $result["group_name"] = $eval_result->group_name;
