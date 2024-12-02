@@ -45,7 +45,7 @@ class StatsigLogger
         $this->enqueue($json);
     }
 
-    function logConfigExposure(StatsigUser $user, string $config, string $rule_id, array $secondary_exposures, ?EvaluationDetails $evaluation_details = null, bool $is_manual = false)
+    function logConfigExposure(StatsigUser $user, string $config, string $rule_id, array $secondary_exposures, bool $rule_passed, ?EvaluationDetails $evaluation_details = null, bool $is_manual = false)
     {
         $exposure = new StatsigEvent("statsig::config_exposure");
         $exposure->setUser($user);
@@ -56,6 +56,7 @@ class StatsigLogger
             "initTime" => $evaluation_details !== null ? $evaluation_details->initTime : 0,
             "serverTime" => $evaluation_details !== null ? $evaluation_details->serverTime : 0,
             "configSyncTime" => $evaluation_details !== null ? $evaluation_details->configSyncTime : 0,
+            "rulePassed" => $rule_passed ? "true" : "false",
         ];
         if ($is_manual) {
             $metadata["isManualExposure"] = "true";
