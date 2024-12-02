@@ -134,6 +134,7 @@ class StatsigServer
                 $config,
                 $res->rule_id,
                 $res->secondary_exposures,
+                $res->bool_value,
                 $res->evaluation_details,
             );
             return new DynamicConfig($config, $res->json_value, $res->rule_id, $res->secondary_exposures, $res->group_name, $res->id_type, $res->evaluation_details);
@@ -167,6 +168,7 @@ class StatsigServer
                 $config,
                 $res->rule_id,
                 $res->secondary_exposures,
+                $res->bool_value,
                 $res->evaluation_details,
                 true,
             );
