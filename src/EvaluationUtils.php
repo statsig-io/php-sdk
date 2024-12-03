@@ -166,6 +166,9 @@ abstract class EvaluationUtils
 
     public static function getValueAsString($value): ?string
     {
+        if (is_array($value)) {
+            return implode(", ", $value);
+        }
         return $value === null ? null : strval($value);
     }
 
