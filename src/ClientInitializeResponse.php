@@ -84,6 +84,9 @@ class ClientInitializeResponse
             $result["group_name"] = $eval_result->group_name;
         }
         $entity_type = strtolower($config_spec["entity"] ?? "");
+        if ($entity_type === "dynamic_config") {
+            $result["passed"] = $eval_result->bool_value;
+        }
         if ($entity_type === "experiment") {
             $result["is_user_in_experiment"] = $eval_result->is_experiment_group;
             $result["is_experiment_active"] = $config_spec["isActive"];
