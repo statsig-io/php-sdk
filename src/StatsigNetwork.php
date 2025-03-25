@@ -86,7 +86,7 @@ class StatsigNetwork
     {
         $req_body = [
             'events' => $events,
-            'statsigMetadata' => StatsigMetadata::getJson($this->session_id)
+            'statsigMetadata' => StatsigMetadata::getJsonWithSessionID($this->session_id)
         ];
         $res = $this->postRequest("rgstr", json_encode($req_body), ['STATSIG-EVENT-COUNT' => strval(count($events))], true);
 
