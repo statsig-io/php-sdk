@@ -12,7 +12,17 @@ abstract class StatsigMetadata
         return [
             'sdkType' => self::SDK_TYPE,
             'sdkVersion' => self::VERSION,
-            'languageVersion' => phpversion()
+            'languageVersion' => phpversion(),
+        ];
+    }
+
+    public static function getJsonWithSessionID($session_id): array
+    {
+        return [
+            'sdkType' => self::SDK_TYPE,
+            'sdkVersion' => self::VERSION,
+            'languageVersion' => phpversion(),
+            'sessionID' => $session_id
         ];
     }
 }
