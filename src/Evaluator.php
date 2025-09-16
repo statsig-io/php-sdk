@@ -23,6 +23,9 @@ class Evaluator
 
     function checkGate($user, $gate): ConfigEvaluation
     {
+        if ($gate == null) {
+            return new ConfigEvaluation(false, $this->store->getEvaluationDetails(EvaluationReason::$UNRECOGNIZED),  "");
+        }
         $def = $this->store->getGateDefinition($gate);
         if ($def === null) {
             return new ConfigEvaluation(false, $this->store->getEvaluationDetails(EvaluationReason::$UNRECOGNIZED),  "");
@@ -152,11 +155,13 @@ class Evaluator
                     ? $nested->bool_value
                     : !$nested->bool_value;
                 $all_exposures = $nested->secondary_exposures;
-                $all_exposures[] = [
-                    "gate" => $target,
-                    "gateValue" => $nested->bool_value ? "true" : "false",
-                    "ruleID" => $nested->rule_id,
-                ];
+                if ($target != null) {
+                    $all_exposures[] = [
+                        "gate" => $target,
+                        "gateValue" => $nested->bool_value ? "true" : "false",
+                        "ruleID" => $nested->rule_id,
+                    ];
+                }
                 return new ConfigEvaluation($result, $nested->evaluation_details, "", $nested->json_value, $all_exposures, $nested->unsupported);
             case 'ip_based':
                 $value = Utils::getFromUser($user, $field) ?? $this->getFromIP($user, $field);
