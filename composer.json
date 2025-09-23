@@ -15,7 +15,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^7.4 || ^8.0",
-        "ua-parser/uap-php": "3.9.14",
+        "ua-parser/uap-php": "3.9.*",
         "statsig/ip3country": "^0.1.0",
         "ext-json": "*",
         "ext-curl": "*",
