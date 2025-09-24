@@ -28,6 +28,9 @@ use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Request;
 
+const DCS_URL = "https://api.statsigcdn.com/v1/";
+const API_URL = "https://statsigapi.net/v1/";
+
 class StatsigNetwork
 {
     private string $key;
@@ -63,8 +66,8 @@ class StatsigNetwork
               'STATSIG-SDK-VERSION' => StatsigMetadata::VERSION,
               'Content-Type' => 'application/json'
           ]
-      ]);
-      $this->error_boundary = new ErrorBoundary($key);
+        ]);
+        $this->error_boundary = new ErrorBoundary($key);
     }
 
     function getErrorBoundary()
@@ -103,8 +106,17 @@ class StatsigNetwork
 
     function postRequest(string $endpoint, string $input, array $extra_headers = [], bool $with_status = false)
     {
-        
-        $response = $this->client->post($endpoint, [
+        $client = new Client([
+          'base_uri' => $endpoint === 'dcs' ? DCS_URL : API_URL,
+          'headers' => [
+              'STATSIG-API-KEY' => $this->key,
+              'STATSIG-SERVER-SESSION-ID' => $this->session_id,
+              'STATSIG-SDK-TYPE' => StatsigMetadata::SDK_TYPE,
+              'STATSIG-SDK-VERSION' => StatsigMetadata::VERSION,
+              'Content-Type' => 'application/json'
+          ]
+        ]);
+        $response = $client->post($endpoint, [
             RequestOptions::BODY => $input,
             RequestOptions::HTTP_ERRORS => false,
             RequestOptions::HEADERS => $extra_headers,
