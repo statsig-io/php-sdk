@@ -263,4 +263,20 @@ abstract class EvaluationUtils
         }
         return true;
     }
+
+    public static function getEpochMs($d): ?int
+    {
+        if ($d === null) {
+            return null;
+        }
+
+        $epoch = (int)$d;
+
+        // If it's in seconds, scale up to ms
+        if ($epoch < 10000000000) { // < 1e10 = definitely seconds
+            $epoch *= 1000;
+        }
+
+        return $epoch;
+    }
 }

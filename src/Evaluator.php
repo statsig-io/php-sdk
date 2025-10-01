@@ -351,12 +351,18 @@ class Evaluator
             case 'neq':
                 return new ConfigEvaluation($value !== $target);
             case 'before':
-                return new ConfigEvaluation($value < $target);
+                $first = Utils::getEpochMs($value);
+                $second = Utils::getEpochMs($target);
+                return new ConfigEvaluation($first !== null && $second !== null && $first < $second);
             case 'after':
-                return new ConfigEvaluation($value > $target);
+                $first = Utils::getEpochMs($value);
+                $second = Utils::getEpochMs($target);
+                return new ConfigEvaluation($first !== null && $second !== null && $first > $second);
             case 'on':
-                $a = date('Y-m-d', $value);
-                $b = date('Y-m-d', $target);
+                $first = Utils::getEpochMs($value);
+                $second = Utils::getEpochMs($target);
+                $a = date('Y-m-d', $first);
+                $b = date('Y-m-d', $second);
                 return new ConfigEvaluation($a == $b);
             case 'array_contains_any':
                 if (!is_array($value)) {
