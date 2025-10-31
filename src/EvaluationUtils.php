@@ -169,6 +169,9 @@ abstract class EvaluationUtils
         if (is_array($value)) {
             return implode(", ", $value);
         }
+        if (is_bool($value)) {
+            return $value ? "true" : "false";
+        }
         return $value === null ? null : strval($value);
     }
 
