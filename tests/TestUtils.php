@@ -53,6 +53,20 @@ abstract class TestUtils
                 return $real_network->postRequest($endpoint, $input);
             });
 
+        $mock_network->shouldReceive('getFromCDNRequest')
+            ->andReturnUsing(function ($endpoint, $extra_headers = [], $with_status = false) use ($on_request, $real_network) {
+                $mock = $on_request("GET", $endpoint, null);
+                if ($mock) {
+                    return $mock;
+                }
+
+                if ($real_network == null) {
+                    throw new Exception("Attempted to make CDN GET network call to '" . $endpoint . "'");
+                }
+
+                return $real_network->getFromCDNRequest($endpoint, $extra_headers, $with_status);
+            });
+
         // Just checks the first key then returns the mock
         $mock_network->shouldReceive("multiGetRequest")
             ->andReturnUsing(function ($input) use ($on_request, $real_network, $mock_network) {
