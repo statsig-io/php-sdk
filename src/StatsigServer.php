@@ -90,7 +90,7 @@ class StatsigServer
         return $this->error_boundary->capture($task, $fallback);
     }
 
-    function getFeatureGateWithExposureLoggingDisabled(Statsig $user, string $gate): FeatureGate
+    function getFeatureGateWithExposureLoggingDisabled(StatsigUser $user, string $gate): FeatureGate
     {
         $task = function () use ($user, $gate) {
             $user = $this->normalizeUser($user);
