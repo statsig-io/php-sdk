@@ -10,10 +10,12 @@ class ErrorBoundary
     private string $api_key;
     private array $seen;
     private \GuzzleHttp\Client $client;
+    private SecretRedactor $redactor;
 
     function __construct(string $api_key)
     {
         $this->api_key = $api_key;
+        $this->redactor = new SecretRedactor($api_key);
         $this->seen = [];
         $this->client = new \GuzzleHttp\Client();
     }
@@ -45,17 +47,17 @@ class ErrorBoundary
     function logException(Exception $e, string $tag = '', array $extra = [], bool $force = false)
     {
         try {
-            $name = $e->__toString();
+            $name = $this->redactor->text($e->__toString());
             if (!$force && ($this->api_key === null || in_array($name, $this->seen))) {
                 return;
             }
             array_push($this->seen, $name);
             $body = array_merge([
                 'exception' => $name,
-                'info' => $e->getTraceAsString(),
+                'info' => $this->redactor->text($e->getTraceAsString()),
                 'statsigMetadata' => StatsigMetadata::getJson(),
-                'tag' => $tag
-            ], $extra);
+                'tag' => $this->redactor->text($tag)
+            ], $this->redactor->value($extra));
             $this->client->request('POST', $this->getEndpoint(), [
                 'max' => 10,
                 'protocols' => ['https'],

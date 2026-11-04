@@ -116,11 +116,15 @@ class StatsigNetwork
 
     function postRequest(string $endpoint, string $input, array $extra_headers = [], bool $with_status = false)
     {
-        $response = $this->client->post($endpoint, [
-            RequestOptions::BODY => $input,
-            RequestOptions::HTTP_ERRORS => false,
-            RequestOptions::HEADERS => $extra_headers,
-        ] + $this->guzzle_options); 
+        try {
+            $response = $this->client->post($endpoint, [
+                RequestOptions::BODY => $input,
+                RequestOptions::HTTP_ERRORS => false,
+                RequestOptions::HEADERS => $extra_headers,
+            ] + $this->guzzle_options);
+        } catch (\Exception $e) {
+            throw (new SecretRedactor($this->key))->exception($e);
+        }
 
         $body = $response->getBody()->getContents();
         $status_code = $response->getStatusCode();
@@ -134,10 +138,14 @@ class StatsigNetwork
 
     function getFromCDNRequest(string $endpoint, array $extra_headers = [], bool $with_status = false) {
         $path = rtrim($endpoint, '/') . '/' . $this->key . '.json';
-        $response = $this->cdn_client->get($path, [
-            RequestOptions::HTTP_ERRORS => false,
-            RequestOptions::HEADERS => $extra_headers,
-        ] + $this->guzzle_options); 
+        try {
+            $response = $this->cdn_client->get($path, [
+                RequestOptions::HTTP_ERRORS => false,
+                RequestOptions::HEADERS => $extra_headers,
+            ] + $this->guzzle_options);
+        } catch (\Exception $e) {
+            throw (new SecretRedactor($this->key))->exception($e);
+        }
 
         $body = $response->getBody()->getContents();
         $status_code = $response->getStatusCode();
